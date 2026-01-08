@@ -169,7 +169,7 @@ const DataExport: React.FC<DataExportProps> = ({ isDark, projects, devices, sens
   };
 
   return (
-    <div className={`w-full h-full flex flex-col p-6 overflow-hidden ${isDark ? 'text-slate-200' : 'text-slate-800'}`}>
+    <div className={`w-full flex flex-col p-6 ${isDark ? 'text-slate-200' : 'text-slate-800'}`}>
       
       <div className="flex justify-between items-center mb-6 flex-shrink-0">
         <div>
@@ -180,9 +180,9 @@ const DataExport: React.FC<DataExportProps> = ({ isDark, projects, devices, sens
         </div>
       </div>
 
-      <div className="flex-1 flex gap-6 overflow-hidden">
+      <div className="flex-1 flex gap-6 items-start">
         
-        {/* 左侧：树形结构选择区域 */}
+        {/* 左侧：树形结构选择区域 - Allow natural expansion */}
         <div className={`w-1/2 flex flex-col rounded-xl border overflow-hidden ${isDark ? 'bg-slate-900/40 border-slate-700' : 'bg-white border-gray-200 shadow-sm'}`}>
           <div className={`px-4 py-3 border-b flex justify-between items-center ${isDark ? 'bg-slate-800/50 border-slate-700' : 'bg-gray-50 border-gray-100'}`}>
             <div className="flex items-center gap-2">
@@ -192,9 +192,9 @@ const DataExport: React.FC<DataExportProps> = ({ isDark, projects, devices, sens
             <span className="text-[10px] opacity-50 font-bold">已选 {selectedSensorIds.length} 个测点</span>
           </div>
 
-          <div className="flex-1 overflow-y-auto p-4 custom-scrollbar">
+          <div className="p-4">
             {projects.length === 0 ? (
-              <div className="h-full flex flex-col items-center justify-center opacity-30 italic text-sm">
+              <div className="h-32 flex flex-col items-center justify-center opacity-30 italic text-sm">
                 <Info size={40} className="mb-2" />
                 请先在接入配置中添加项目
               </div>
@@ -258,8 +258,8 @@ const DataExport: React.FC<DataExportProps> = ({ isDark, projects, devices, sens
           </div>
         </div>
 
-        {/* 右侧：筛选参数与时段配置 */}
-        <div className="w-1/2 flex flex-col gap-6">
+        {/* 右侧：筛选参数与时段配置 - Sticky or just flow */}
+        <div className="w-1/2 flex flex-col gap-6 sticky top-0">
           
           {/* 设备状态筛选 */}
           <div className={`p-5 rounded-xl border ${isDark ? 'bg-slate-800/40 border-slate-700' : 'bg-white border-gray-200 shadow-sm'}`}>

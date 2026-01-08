@@ -412,7 +412,10 @@ function App() {
 
   const [splitRatio, setSplitRatio] = useState(50); 
   const [isResizingSplit, setIsResizingSplit] = useState(false);
-  const middleColumnRef = useRef<HTMLDivElement>(null);
+  
+  // Refs for layout handling
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
+  const contentRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const handleResize = () => {
@@ -438,8 +441,9 @@ function App() {
   };
 
   const handleMouseMove = (e: MouseEvent) => {
-    if (isResizingSplit && middleColumnRef.current) {
-        const rect = middleColumnRef.current.getBoundingClientRect();
+    if (isResizingSplit && contentRef.current) {
+        // NOTE: In diagnosis mode, contentRef is the container.
+        const rect = contentRef.current.getBoundingClientRect();
         const relativeY = e.clientY - rect.top;
         const rawPercentage = (relativeY / rect.height) * 100;
         setSplitRatio(Math.min(Math.max(rawPercentage, 20), 80));
@@ -485,12 +489,12 @@ function App() {
 
   // --- PRD Interaction Logic (Anchored to Content) ---
   const handleContentClick = (e: React.MouseEvent) => {
-      // Only allow creation if in Create Mode and main content exists
-      if (!isPrdMode || interactionMode !== 'create' || !middleColumnRef.current) return;
+      // Only allow creation if in Create Mode and content exists
+      if (!isPrdMode || interactionMode !== 'create' || !contentRef.current) return;
       
-      // Calculate coordinates relative to the content container
-      // This ensures markers stay pinned to UI elements when sidebar toggles (layout shifts)
-      const rect = middleColumnRef.current.getBoundingClientRect();
+      // Calculate coordinates relative to the SCROLLABLE content container (contentRef)
+      // This ensures markers stay pinned to components even when scrolled
+      const rect = contentRef.current.getBoundingClientRect();
       const relativeX = e.clientX - rect.left;
       const relativeY = e.clientY - rect.top;
       
@@ -515,7 +519,6 @@ function App() {
           const permanentMarker = { ...updatedMarker, id: Date.now().toString() };
           setPrdMarkers(prev => [...prev, permanentMarker]);
           setTempMarker(null); // Clear draft
-          // Optional: Revert to View mode? No, keeping in Create mode allows rapid addition.
       } else {
           // Case 2: Updating an existing marker
           setPrdMarkers(prev => prev.map(m => m.id === updatedMarker.id ? updatedMarker : m));
@@ -529,33 +532,25 @@ function App() {
       setEditingMarkerId(null);
   };
 
-  // Updated delete handler
   const handleDeleteMarker = (id: string, requireConfirmation: boolean = true) => {
-      // Case 1: Discarding the current draft from within the modal
       if (tempMarker && tempMarker.id === id) {
           setTempMarker(null);
           return;
       }
-
-      // Case 2: Deleting an existing marker
       if (!id) return;
-
       if (requireConfirmation && !window.confirm('确定要删除这条 PRD 需求标注吗？')) {
           return;
       }
-
       setPrdMarkers(currentMarkers => {
           const newMarkers = currentMarkers.filter(m => m.id !== id);
           localStorage.setItem('prd-annotations-data', JSON.stringify(newMarkers));
           return newMarkers;
       });
-      
       if (editingMarkerId === id) {
           setEditingMarkerId(null);
       }
   };
 
-  // --- PRD Import/Export Logic ---
   const handleExportPrdData = () => {
       const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(prdMarkers, null, 2));
       const downloadAnchorNode = document.createElement('a');
@@ -569,29 +564,21 @@ function App() {
   const handleImportPrdData = (e: React.ChangeEvent<HTMLInputElement>) => {
       const file = e.target.files?.[0];
       if (!file) return;
-
       const reader = new FileReader();
       reader.onload = (event) => {
           try {
               const json = JSON.parse(event.target?.result as string);
               if (Array.isArray(json)) {
-                  // Robust Schema Migration Logic
-                  // Iterate over imported items and merge with default structure
                   const migratedMarkers: PrdMarker[] = json.map((item: any) => ({
-                      ...DEFAULT_PRD_MARKER, // Base defaults
-                      ...item,               // Overwrite with imported data
-                      // Ensure critical fields exist even if missing in both (fallback to random ID)
+                      ...DEFAULT_PRD_MARKER,
+                      ...item,
                       id: item.id || `migrated-${Date.now()}-${Math.random().toString(36).substr(2, 5)}`
                   }));
-
                   setPrdMarkers(migratedMarkers);
-                  // Clear any active states on import
                   setTempMarker(null);
                   setEditingMarkerId(null);
-                  
-                  // Force immediate save to ensure persistence
                   localStorage.setItem('prd-annotations-data', JSON.stringify(migratedMarkers));
-                  alert(`成功导入 ${migratedMarkers.length} 条标注数据 (已自动适配最新数据结构)`);
+                  alert(`成功导入 ${migratedMarkers.length} 条标注数据`);
               } else {
                   alert('无效的文件格式：期望标注数组');
               }
@@ -601,28 +588,27 @@ function App() {
           }
       };
       reader.readAsText(file);
-      e.target.value = ''; // Reset input
+      e.target.value = '';
   };
 
   if (!currentUser) {
     return <Login onLogin={handleLogin} />;
   }
 
-  // Filter markers based on current context (ViewMode)
-  // Also include the tempMarker if it belongs to current view (so user sees the pin they just dropped)
   const savedMarkers = prdMarkers.filter(m => m.contextId === currentView);
   const markersToRender = tempMarker && tempMarker.contextId === currentView 
       ? [...savedMarkers, tempMarker] 
       : savedMarkers;
 
-  // Determine active marker for modal (Draft OR Existing)
   const activeMarker = tempMarker || (editingMarkerId ? prdMarkers.find(m => m.id === editingMarkerId) : null);
 
+  // Layout Logic:
+  // For 'dashboard', 'config', 'export', 'settings', the page should scroll naturally.
+  // For 'diagnosis', it requires a fixed viewport for 3D and charts.
+  const isScrollableView = currentView !== 'diagnosis';
+
   return (
-    <div 
-        className={`${isDark ? 'dark' : ''} h-screen w-screen overflow-hidden flex flex-col relative`}
-    >
-      {/* PRD Edit Modal - Shows for both Draft and Edit */}
+    <div className={`${isDark ? 'dark' : ''} h-screen w-screen overflow-hidden flex flex-col relative`}>
       {isPrdMode && activeMarker && (
           <PrdEditModal 
             isOpen={true}
@@ -634,7 +620,6 @@ function App() {
           />
       )}
 
-      {/* PRD Control Panel (Replaces old FAB) */}
       <PrdToolPanel 
           isDark={isDark}
           isPrdMode={isPrdMode}
@@ -645,17 +630,10 @@ function App() {
           onImportRef={importFileRef}
       />
 
-      {/* Hidden File Input for Import */}
-      <input 
-          type="file" 
-          ref={importFileRef} 
-          className="hidden" 
-          accept=".json" 
-          onChange={handleImportPrdData} 
-      />
+      <input type="file" ref={importFileRef} className="hidden" accept=".json" onChange={handleImportPrdData} />
 
       <div className={`flex flex-1 overflow-hidden transition-colors duration-300 ${isDark ? 'bg-tech-dark text-slate-200' : 'bg-slate-50 text-slate-800'}`}>
-        {/* Left Sidebar (Navigation) */}
+        {/* Left Sidebar */}
         <div className="flex-shrink-0 z-20">
           <Sidebar 
             theme={theme} 
@@ -670,125 +648,130 @@ function App() {
           />
         </div>
 
-        {/* Middle Content Area */}
-        <div ref={middleColumnRef} id="app-main-content-area" className="flex-1 flex flex-col p-4 min-w-0 overflow-hidden relative">
-          
-          {/* PRD Click Overlay - Only exists in CREATE mode */}
-          {isPrdMode && interactionMode === 'create' && (
-              <div 
-                className="absolute inset-0 z-40 cursor-crosshair"
-                onClick={handleContentClick}
-                style={{ backgroundColor: 'rgba(236, 72, 153, 0.05)' }} // Slight pink tint to indicate Add mode
-              >
-                  <div className="absolute top-4 left-1/2 transform -translate-x-1/2 bg-pink-600 text-white px-4 py-2 rounded-full shadow-lg font-bold text-sm pointer-events-none animate-bounce flex items-center gap-2">
-                      <Plus size={16} /> 点击屏幕添加标注 (上下文: {currentView})
+        {/* Middle Content Area - SCROLL CONTAINER */}
+        <div 
+            ref={scrollContainerRef} 
+            id="app-main-content-area" 
+            className={`flex-1 flex flex-col min-w-0 relative transition-colors duration-300 
+                ${isScrollableView ? 'overflow-y-auto overflow-x-hidden' : 'overflow-hidden'}
+            `}
+        >
+          {/* Inner Content Wrapper - EXPANDS WITH CONTENT */}
+          <div 
+            ref={contentRef}
+            className={`relative w-full ${isScrollableView ? 'min-h-full h-fit' : 'h-full'} p-4 flex flex-col`}
+          >
+              {/* PRD Click Overlay */}
+              {isPrdMode && interactionMode === 'create' && (
+                  <div 
+                    className="absolute inset-0 z-40 cursor-crosshair"
+                    onClick={handleContentClick}
+                    style={{ backgroundColor: 'rgba(236, 72, 153, 0.05)' }}
+                  >
+                      <div className={`absolute top-4 left-1/2 transform -translate-x-1/2 bg-pink-600 text-white px-4 py-2 rounded-full shadow-lg font-bold text-sm pointer-events-none animate-bounce flex items-center gap-2 ${isScrollableView ? 'sticky top-4' : ''}`}>
+                          <Plus size={16} /> 点击屏幕添加标注 (上下文: {currentView})
+                      </div>
                   </div>
-              </div>
-          )}
+              )}
 
-          {/* PRD Markers (Z-Index 50) - Always visible in PRD Mode, clickable in both View/Create */}
-          {isPrdMode && markersToRender.map(marker => (
-              <div
-                key={marker.id}
-                className="absolute z-50 transform -translate-x-1/2 -translate-y-1/2 cursor-pointer group"
-                style={{ left: `${marker.x}%`, top: `${marker.y}%` }}
-                onClick={(e) => {
-                    e.stopPropagation(); // Prevent overlay click (if in create mode) or app click (if in view mode)
-                    if (marker.id !== tempMarker?.id) {
-                        setEditingMarkerId(marker.id);
-                    }
-                }}
-              >
-                  <div className={`
-                      w-8 h-8 rounded-full flex items-center justify-center shadow-xl border-2 border-white transition-transform hover:scale-125
-                      ${marker.priority === 'High' ? 'bg-red-500' : marker.priority === 'Medium' ? 'bg-orange-500' : 'bg-blue-500'}
-                      ${marker.id === tempMarker?.id ? 'animate-pulse ring-4 ring-pink-400/50' : ''}
-                  `}>
-                      <Pin size={14} className="text-white fill-current" />
-                  </div>
-                  
-                  {/* Quick Delete "X" Button (Visible on Hover, only for saved markers) */}
-                  {marker.id !== tempMarker?.id && (
-                      <button
-                          onClick={(e) => {
-                              e.preventDefault();
-                              e.stopPropagation();
-                              // PASS FALSE TO SKIP CONFIRMATION
-                              handleDeleteMarker(marker.id, false);
-                          }}
-                          onMouseDown={(e) => e.stopPropagation()} 
-                          className="absolute -top-3 -right-3 w-6 h-6 bg-red-600 text-white rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-200 shadow-lg border-2 border-white hover:bg-red-700 hover:scale-110 z-[60]"
-                          title="删除标注"
-                      >
-                          <X size={12} strokeWidth={3} />
-                      </button>
-                  )}
+              {/* PRD Markers */}
+              {isPrdMode && markersToRender.map(marker => (
+                  <div
+                    key={marker.id}
+                    className="absolute z-50 transform -translate-x-1/2 -translate-y-1/2 cursor-pointer group"
+                    style={{ left: `${marker.x}%`, top: `${marker.y}%` }}
+                    onClick={(e) => {
+                        e.stopPropagation();
+                        if (marker.id !== tempMarker?.id) setEditingMarkerId(marker.id);
+                    }}
+                  >
+                      <div className={`
+                          w-8 h-8 rounded-full flex items-center justify-center shadow-xl border-2 border-white transition-transform hover:scale-125
+                          ${marker.priority === 'High' ? 'bg-red-500' : marker.priority === 'Medium' ? 'bg-orange-500' : 'bg-blue-500'}
+                          ${marker.id === tempMarker?.id ? 'animate-pulse ring-4 ring-pink-400/50' : ''}
+                      `}>
+                          <Pin size={14} className="text-white fill-current" />
+                      </div>
+                      
+                      {marker.id !== tempMarker?.id && (
+                          <button
+                              onClick={(e) => {
+                                  e.preventDefault(); e.stopPropagation();
+                                  handleDeleteMarker(marker.id, false);
+                              }}
+                              onMouseDown={(e) => e.stopPropagation()} 
+                              className="absolute -top-3 -right-3 w-6 h-6 bg-red-600 text-white rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-200 shadow-lg border-2 border-white hover:bg-red-700 hover:scale-110 z-[60]"
+                              title="删除标注"
+                          >
+                              <X size={12} strokeWidth={3} />
+                          </button>
+                      )}
 
-                  {/* Tooltip */}
-                  <div className="absolute top-full left-1/2 transform -translate-x-1/2 mt-2 bg-black/80 text-white text-xs px-2 py-1 rounded whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-0">
-                      {marker.title || '未命名需求'}
+                      <div className="absolute top-full left-1/2 transform -translate-x-1/2 mt-2 bg-black/80 text-white text-xs px-2 py-1 rounded whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-0">
+                          {marker.title || '未命名需求'}
+                      </div>
                   </div>
-              </div>
-          ))}
+              ))}
 
-          {currentView === 'dashboard' ? (
-             <div className={`w-full h-full rounded-xl overflow-hidden shadow-sm border transition-colors duration-300 ${isDark ? 'bg-tech-card border-slate-700' : 'bg-white border-gray-200'}`}>
-                <Dashboard 
-                  devices={devices} 
-                  projects={configProjects}
-                  isDark={isDark} 
-                  onDeviceSelect={(id) => { setCurrentDeviceId(id); setCurrentView('diagnosis'); }} 
-                  onUpdateDeviceImage={handleUpdateDeviceImage} 
-                />
-             </div>
-          ) : currentView === 'config' ? (
-            <div className={`w-full h-full rounded-xl overflow-hidden shadow-sm border transition-colors duration-300 ${isDark ? 'bg-tech-card border-slate-700' : 'bg-white border-gray-200'}`}>
-               <AccessConfig 
-                  isDark={isDark} 
-                  projects={configProjects} setProjects={setConfigProjects}
-                  devices={configDevices} setDevices={setConfigDevices}
-                  ipcs={configIpcs} setIpcs={setConfigIpcs}
-                  sensors={configSensors} setSensors={setConfigSensors}
-               />
-            </div>
-          ) : currentView === 'export' ? (
-            <div className={`w-full h-full rounded-xl overflow-hidden shadow-sm border transition-colors duration-300 ${isDark ? 'bg-tech-card border-slate-700' : 'bg-white border-gray-200'}`}>
-               <DataExport 
-                  isDark={isDark} 
-                  projects={configProjects} 
-                  devices={configDevices} 
-                  sensors={configSensors} 
-               />
-            </div>
-          ) : currentView === 'settings' ? (
-            <div className={`w-full h-full rounded-xl overflow-hidden shadow-sm border transition-colors duration-300 ${isDark ? 'bg-tech-card border-slate-700' : 'bg-white border-gray-200'}`}>
-               <SystemSettings isDark={isDark} />
-            </div>
-          ) : (
-            <>
-              <div className="w-full min-h-0 transition-[height] duration-75 ease-linear" style={{ height: `${splitRatio}%` }}>
-                <DigitalTwin 
-                  sensors={simulationState.sensors} 
-                  pdSource={simulationState.pdSource} 
-                  isDark={isDark} 
-                  activeSensorId={activeSensorId} 
-                  onSensorSelect={handleSensorSelect} 
-                  devices={devices} 
-                  projects={configProjects}
-                  currentDeviceId={currentDeviceId} 
-                  onDeviceChange={setCurrentDeviceId}
-                />
-              </div>
-              <div className={`w-full h-3 cursor-row-resize flex items-center justify-center z-30 flex-shrink-0 group hover:scale-y-110 transition-transform my-1 ${isResizingSplit ? 'opacity-100' : 'opacity-60 hover:opacity-100'}`} onMouseDown={startResizingSplit}>
-                  <div className={`w-32 h-1.5 rounded-full flex items-center justify-center transition-colors ${isDark ? 'bg-slate-700 group-hover:bg-blue-500' : 'bg-gray-300 group-hover:bg-blue-400'}`}>
-                      <GripHorizontal size={12} className={`opacity-50 ${isDark ? 'text-slate-400' : 'text-slate-600'}`} />
+              {currentView === 'dashboard' ? (
+                 <div className={`w-full rounded-xl shadow-sm border transition-colors duration-300 ${isDark ? 'bg-tech-card border-slate-700' : 'bg-white border-gray-200'}`}>
+                    <Dashboard 
+                      devices={devices} 
+                      projects={configProjects}
+                      isDark={isDark} 
+                      onDeviceSelect={(id) => { setCurrentDeviceId(id); setCurrentView('diagnosis'); }} 
+                      onUpdateDeviceImage={handleUpdateDeviceImage} 
+                    />
+                 </div>
+              ) : currentView === 'config' ? (
+                <div className={`w-full rounded-xl shadow-sm border transition-colors duration-300 ${isDark ? 'bg-tech-card border-slate-700' : 'bg-white border-gray-200'}`}>
+                   <AccessConfig 
+                      isDark={isDark} 
+                      projects={configProjects} setProjects={setConfigProjects}
+                      devices={configDevices} setDevices={setConfigDevices}
+                      ipcs={configIpcs} setIpcs={setConfigIpcs}
+                      sensors={configSensors} setSensors={setConfigSensors}
+                   />
+                </div>
+              ) : currentView === 'export' ? (
+                <div className={`w-full rounded-xl shadow-sm border transition-colors duration-300 ${isDark ? 'bg-tech-card border-slate-700' : 'bg-white border-gray-200'}`}>
+                   <DataExport 
+                      isDark={isDark} 
+                      projects={configProjects} 
+                      devices={configDevices} 
+                      sensors={configSensors} 
+                   />
+                </div>
+              ) : currentView === 'settings' ? (
+                <div className={`w-full rounded-xl shadow-sm border transition-colors duration-300 ${isDark ? 'bg-tech-card border-slate-700' : 'bg-white border-gray-200'}`}>
+                   <SystemSettings isDark={isDark} />
+                </div>
+              ) : (
+                <>
+                  <div className="w-full min-h-0 transition-[height] duration-75 ease-linear" style={{ height: `${splitRatio}%` }}>
+                    <DigitalTwin 
+                      sensors={simulationState.sensors} 
+                      pdSource={simulationState.pdSource} 
+                      isDark={isDark} 
+                      activeSensorId={activeSensorId} 
+                      onSensorSelect={handleSensorSelect} 
+                      devices={devices} 
+                      projects={configProjects}
+                      currentDeviceId={currentDeviceId} 
+                      onDeviceChange={setCurrentDeviceId}
+                    />
                   </div>
-              </div>
-              <div className="flex-1 min-h-0 w-full overflow-hidden">
-                <TrendAnalysis isDark={isDark} sensorName={activeSensorName} sensorId={activeSensorId} sensorSn={activeSensorSn} />
-              </div>
-            </>
-          )}
+                  <div className={`w-full h-3 cursor-row-resize flex items-center justify-center z-30 flex-shrink-0 group hover:scale-y-110 transition-transform my-1 ${isResizingSplit ? 'opacity-100' : 'opacity-60 hover:opacity-100'}`} onMouseDown={startResizingSplit}>
+                      <div className={`w-32 h-1.5 rounded-full flex items-center justify-center transition-colors ${isDark ? 'bg-slate-700 group-hover:bg-blue-500' : 'bg-gray-300 group-hover:bg-blue-400'}`}>
+                          <GripHorizontal size={12} className={`opacity-50 ${isDark ? 'text-slate-400' : 'text-slate-600'}`} />
+                      </div>
+                  </div>
+                  <div className="flex-1 min-h-0 w-full overflow-hidden">
+                    <TrendAnalysis isDark={isDark} sensorName={activeSensorName} sensorId={activeSensorId} sensorSn={activeSensorSn} />
+                  </div>
+                </>
+              )}
+          </div>
         </div>
 
         {/* Right Sidebar (Status Overview) */}

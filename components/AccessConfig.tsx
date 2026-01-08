@@ -242,7 +242,6 @@ const AccessConfig: React.FC<AccessConfigProps> = ({
   const [formErrors, setFormErrors] = useState<Record<string, boolean>>({});
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // New States for Sensor Reading
   const [isReadingSensor, setIsReadingSensor] = useState(false);
   const [sensorTypeRead, setSensorTypeRead] = useState(false);
   const [readError, setReadError] = useState<string | null>(null);
@@ -250,7 +249,6 @@ const AccessConfig: React.FC<AccessConfigProps> = ({
   const [viewingChannelsSensor, setViewingChannelsSensor] = useState<ConfigSensor | null>(null);
   const [topologyProject, setTopologyProject] = useState<Project | null>(null);
 
-  // Unified Card Styling for Projects, Devices, IPCs
   const cardClass = `flex flex-col p-5 rounded-xl border transition-all duration-300 min-h-[260px] ${isDark ? 'bg-slate-800/40 border-slate-700 hover:border-blue-500/50' : 'bg-white border-gray-200 hover:shadow-lg hover:border-blue-300'}`;
   const inputClass = `w-full px-4 py-2.5 rounded-lg border outline-none transition-all ${isDark ? 'bg-slate-900 border-slate-700 text-white focus:border-blue-500 focus:ring-1 focus:ring-blue-500' : 'bg-gray-50 border-gray-300 text-slate-800 focus:border-blue-600 focus:ring-1 focus:ring-blue-600'}`;
   const labelClass = `block text-xs font-bold mb-1.5 uppercase tracking-wider ${isDark ? 'text-slate-400' : 'text-slate-500'}`;
@@ -285,10 +283,8 @@ const AccessConfig: React.FC<AccessConfigProps> = ({
   const handleSave = () => {
     setIpError(false);
     
-    // Validate Required Fields
     if (!validateForm()) return;
 
-    // Validate IP for IPCs
     if (activeTab === 'ipcs' && !validateIP(formData.ip)) {
       setIpError(true);
       return;
@@ -331,7 +327,6 @@ const AccessConfig: React.FC<AccessConfigProps> = ({
     if (tab === 'ipcs') item = ipcs.find(i => i.id === id);
     if (tab === 'sensors') {
         item = sensors.find(s => s.id === id);
-        // Editing existing sensor assumes type has been read/configured
         setSensorTypeRead(true);
     }
     
@@ -387,29 +382,18 @@ const AccessConfig: React.FC<AccessConfigProps> = ({
   };
 
   const handleReadSensorType = () => {
-    // Clear previous errors
     setReadError(null);
-
-    // Requirement: Only check for SN
     if (!formData.sn) {
         setReadError("请输入传感节点SN，以便系统识别通信协议");
         return;
     }
-
-    // Capture values synchronously
-    // If type is already selected, we respect it, otherwise we simulate detection
     let detectionType = formData.type;
-
     setIsReadingSensor(true);
-    setSensorTypeRead(false); // Hide until read is complete
+    setSensorTypeRead(false);
     
-    // Simulate Network Request (2.5s)
     setTimeout(() => {
         setIsReadingSensor(false);
         setSensorTypeRead(true);
-        
-        // Simulation Logic:
-        // If no type selected, simulate auto-detection based on SN or random
         if (!detectionType) {
             const sn = formData.sn.toUpperCase();
             if (sn.includes('A2')) detectionType = 'SFPD-A2';
@@ -417,8 +401,6 @@ const AccessConfig: React.FC<AccessConfigProps> = ({
             else if (sn.includes('B2')) detectionType = 'SFPD-B2';
             else detectionType = 'SFPD-A1'; // Default
         }
-        
-        // Auto-detect channels based on Hardware Model
         let detectedChannels: string[] = [];
         if (detectionType === 'SFPD-A1') detectedChannels = ['UHF', 'TEV'];
         else if (detectionType === 'SFPD-A2') detectedChannels = ['HFCT1', 'HFCT2'];
@@ -426,11 +408,10 @@ const AccessConfig: React.FC<AccessConfigProps> = ({
         else if (detectionType === 'SFPD-B2') detectedChannels = ['温度', '湿度'];
         else detectedChannels = ['UHF']; // Default
 
-        // Populate channels
         const newChannels = detectedChannels.map(type => ({ type, location: '' }));
         setFormData(prev => ({ 
             ...prev, 
-            type: detectionType, // Auto-fill type if it was empty
+            type: detectionType, 
             channels: newChannels 
         }));
         
@@ -438,15 +419,12 @@ const AccessConfig: React.FC<AccessConfigProps> = ({
   };
 
   const handleImportConfig = (data: any) => {
-     // Basic validation
      if (!data || typeof data !== 'object') {
          alert('无效的配置文件');
          return;
      }
-
      const { devices: newDevices, sensors: newSensors, ipcs: newIpcs } = data;
      let importedCount = 0;
-
      if (Array.isArray(newIpcs)) {
          setIpcs(prev => {
              const map = new Map(prev.map(item => [item.id, item]));
@@ -455,7 +433,6 @@ const AccessConfig: React.FC<AccessConfigProps> = ({
          });
          importedCount += newIpcs.length;
      }
-
      if (Array.isArray(newDevices)) {
          setDevices(prev => {
              const map = new Map(prev.map(item => [item.id, item]));
@@ -464,7 +441,6 @@ const AccessConfig: React.FC<AccessConfigProps> = ({
          });
          importedCount += newDevices.length;
      }
-
      if (Array.isArray(newSensors)) {
          setSensors(prev => {
              const map = new Map(prev.map(item => [item.id, item]));
@@ -473,10 +449,9 @@ const AccessConfig: React.FC<AccessConfigProps> = ({
          });
          importedCount += newSensors.length;
      }
-
      if (importedCount > 0) {
          alert(`成功导入配置！更新/添加了相关资产数据。`);
-         setTopologyProject(null); // Close modal to refresh or prevent stale state view
+         setTopologyProject(null);
      } else {
          alert('配置文件中未包含有效的资产数据');
      }
@@ -503,7 +478,7 @@ const AccessConfig: React.FC<AccessConfigProps> = ({
   );
 
   return (
-    <div className={`w-full h-full flex flex-col p-6 animate-fadeIn ${isDark ? 'text-slate-200' : 'text-slate-800'}`}>
+    <div className={`w-full flex flex-col p-6 animate-fadeIn ${isDark ? 'text-slate-200' : 'text-slate-800'}`}>
       {topologyProject && (
         <TopologyModal 
           isOpen={!!topologyProject}
@@ -531,7 +506,7 @@ const AccessConfig: React.FC<AccessConfigProps> = ({
               setEditingId(null); 
               setIpError(false); 
               setFormErrors({});
-              setSensorTypeRead(false); // Reset read status for new items
+              setSensorTypeRead(false);
               setReadError(null);
           }}
           className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-5 py-2.5 rounded-lg font-bold shadow-lg shadow-blue-500/30 active:scale-95 transition-all"
@@ -560,7 +535,7 @@ const AccessConfig: React.FC<AccessConfigProps> = ({
         ))}
       </div>
 
-      <div className="flex-1 overflow-y-auto custom-scrollbar pr-2 pb-6">
+      <div className="pr-2 pb-6">
         {showForm && (
           <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 backdrop-blur-md p-6 overflow-y-auto animate-fadeIn">
             <div className={`w-full max-w-2xl rounded-2xl shadow-2xl flex flex-col overflow-hidden animate-slideInUp my-auto border ${isDark ? 'bg-slate-900 border-slate-700' : 'bg-white border-gray-200'}`}>
@@ -578,35 +553,20 @@ const AccessConfig: React.FC<AccessConfigProps> = ({
                     <div className="grid grid-cols-2 gap-4">
                       <div>
                         <label className={labelClass}>项目名称 <span className="text-red-500">*</span></label>
-                        <input 
-                          className={`${inputClass} ${formErrors.name ? 'border-red-500 focus:border-red-500 ring-1 ring-red-500/50' : ''}`} 
-                          value={formData.name || ''} 
-                          placeholder="如: 500kV站局放监测项目" 
-                          onChange={e => {
-                            setFormData({...formData, name: e.target.value});
-                            if (formErrors.name) setFormErrors({...formErrors, name: false});
-                          }} 
-                        />
+                        <input className={`${inputClass} ${formErrors.name ? 'border-red-500 focus:border-red-500 ring-1 ring-red-500/50' : ''}`} value={formData.name || ''} placeholder="如: 500kV站局放监测项目" onChange={e => { setFormData({...formData, name: e.target.value}); if (formErrors.name) setFormErrors({...formErrors, name: false}); }} />
                       </div>
                       <div><label className={labelClass}>项目类型</label><input className={inputClass} value={formData.type || ''} placeholder="项目属性" onChange={e => setFormData({...formData, type: e.target.value})} /></div>
                     </div>
                     <div><label className={labelClass}>项目描述</label><textarea className={`${inputClass} h-24`} value={formData.description || ''} placeholder="输入项目背景 or 备注..." onChange={e => setFormData({...formData, description: e.target.value})} /></div>
                   </>
                 )}
-
+                {/* ... existing device/ipc/sensor forms ... */}
                 {activeTab === 'devices' && (
                   <>
                     <div className="grid grid-cols-2 gap-4">
                       <div>
                         <label className={labelClass}>所属项目 <span className="text-red-500">*</span></label>
-                        <select 
-                          className={`${inputClass} ${formErrors.projectId ? 'border-red-500 focus:border-red-500 ring-1 ring-red-500/50' : ''}`}
-                          value={formData.projectId || ''} 
-                          onChange={e => {
-                            setFormData({...formData, projectId: e.target.value});
-                            if (formErrors.projectId) setFormErrors({...formErrors, projectId: false});
-                          }}
-                        >
+                        <select className={`${inputClass} ${formErrors.projectId ? 'border-red-500 focus:border-red-500 ring-1 ring-red-500/50' : ''}`} value={formData.projectId || ''} onChange={e => { setFormData({...formData, projectId: e.target.value}); if (formErrors.projectId) setFormErrors({...formErrors, projectId: false}); }}>
                           <option value="">选择关联项目</option>
                           {projects.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
                         </select>
@@ -624,30 +584,18 @@ const AccessConfig: React.FC<AccessConfigProps> = ({
                       </div>
                     </div>
                     <div><label className={labelClass}>设备名称</label><input className={inputClass} value={formData.name || ''} placeholder="输入资产名称 (如: 101隔离刀闸)" onChange={e => setFormData({...formData, name: e.target.value})} /></div>
-                    
                     <div>
                       <label className={labelClass}>设备图片 <span className="text-red-500">*</span></label>
-                      <div 
-                        onClick={() => fileInputRef.current?.click()}
-                        className={`w-full h-32 border-2 border-dashed rounded-xl flex flex-col items-center justify-center cursor-pointer transition-all relative overflow-hidden 
-                          ${formErrors.image 
-                            ? 'border-red-500 bg-red-500/5' 
-                            : (isDark ? 'border-slate-700 hover:bg-slate-800/50' : 'border-gray-200 hover:bg-gray-50')
-                          }`}
-                      >
+                      <div onClick={() => fileInputRef.current?.click()} className={`w-full h-32 border-2 border-dashed rounded-xl flex flex-col items-center justify-center cursor-pointer transition-all relative overflow-hidden ${formErrors.image ? 'border-red-500 bg-red-500/5' : (isDark ? 'border-slate-700 hover:bg-slate-800/50' : 'border-gray-200 hover:bg-gray-50')}`}>
                         {formData.image ? (
                           <>
                             <img src={formData.image} className="w-full h-full object-cover" alt="Preview" />
-                            <div className="absolute inset-0 bg-black/30 flex items-center justify-center opacity-0 hover:opacity-100">
-                                <Upload className="text-white" size={24} />
-                            </div>
+                            <div className="absolute inset-0 bg-black/30 flex items-center justify-center opacity-0 hover:opacity-100"><Upload className="text-white" size={24} /></div>
                           </>
                         ) : (
                           <>
                             <ImageIcon className={`mb-2 ${formErrors.image ? 'text-red-400' : 'opacity-30'}`} size={28} />
-                            <span className={`text-xs font-bold ${formErrors.image ? 'text-red-500' : 'opacity-40'}`}>
-                                {formErrors.image ? '请上传设备图片 (必填)' : '点击上传本地资产图片'}
-                            </span>
+                            <span className={`text-xs font-bold ${formErrors.image ? 'text-red-500' : 'opacity-40'}`}>{formErrors.image ? '请上传设备图片 (必填)' : '点击上传本地资产图片'}</span>
                           </>
                         )}
                         <input type="file" ref={fileInputRef} className="hidden" accept="image/*" onChange={handleImageUpload} />
@@ -655,153 +603,36 @@ const AccessConfig: React.FC<AccessConfigProps> = ({
                     </div>
                   </>
                 )}
-
+                {/* ... Ipc and Sensor forms ... */}
                 {activeTab === 'ipcs' && (
                   <>
                     <div className="grid grid-cols-2 gap-4">
-                      <div>
-                        <label className={labelClass}>工控机名称 <span className="text-red-500">*</span></label>
-                        <input 
-                          className={`${inputClass} ${formErrors.name ? 'border-red-500 focus:border-red-500 ring-1 ring-red-500/50' : ''}`} 
-                          value={formData.name || ''} 
-                          placeholder="如: A相工控机-01" 
-                          onChange={e => {
-                            setFormData({...formData, name: e.target.value});
-                            if (formErrors.name) setFormErrors({...formErrors, name: false});
-                          }} 
-                        />
-                      </div>
-                      <div>
-                        <label className={labelClass}>工控机 IP</label>
-                        <input className={`${inputClass} ${ipError ? 'border-red-500' : ''}`} value={formData.ip || ''} placeholder="192.168.X.X" onChange={e => setFormData({...formData, ip: e.target.value})} />
-                        {ipError && <p className="text-[10px] text-red-500 mt-1">请输入合法的 IP 地址格式</p>}
-                      </div>
+                      <div><label className={labelClass}>工控机名称 <span className="text-red-500">*</span></label><input className={`${inputClass} ${formErrors.name ? 'border-red-500 focus:border-red-500 ring-1 ring-red-500/50' : ''}`} value={formData.name || ''} placeholder="如: A相工控机-01" onChange={e => { setFormData({...formData, name: e.target.value}); if (formErrors.name) setFormErrors({...formErrors, name: false}); }} /></div>
+                      <div><label className={labelClass}>工控机 IP</label><input className={`${inputClass} ${ipError ? 'border-red-500' : ''}`} value={formData.ip || ''} placeholder="192.168.X.X" onChange={e => setFormData({...formData, ip: e.target.value})} />{ipError && <p className="text-[10px] text-red-500 mt-1">请输入合法的 IP 地址格式</p>}</div>
                     </div>
                     <div><label className={labelClass}>工控机描述</label><textarea className={`${inputClass} h-20`} value={formData.description || ''} placeholder="输入工控机用途或部署位置备注..." onChange={e => setFormData({...formData, description: e.target.value})} /></div>
                   </>
                 )}
-
                 {activeTab === 'sensors' && (
                   <>
                     <div className="grid grid-cols-2 gap-4">
-                      <div><label className={labelClass}>硬件型号</label>
-                        <select 
-                            className={inputClass} 
-                            value={formData.type || ''} 
-                            onChange={e => {
-                                setFormData(prev => ({...prev, type: e.target.value}));
-                                setSensorTypeRead(false); // Reset read status when type changes
-                                setReadError(null);
-                            }}
-                        >
-                          <option value="">选择型号</option>
-                          <option value="SFPD-A1">SFPD-A1 (UHF+TEV)</option>
-                          <option value="SFPD-A2">SFPD-A2 (双HFCT)</option>
-                          <option value="SFPD-B1">SFPD-B1 (AE+UHF)</option>
-                          <option value="SFPD-B2">SFPD-B2 (温湿度)</option>
-                        </select>
-                      </div>
-                      <div>
-                        <label className={labelClass}>传感节点 SN <span className="text-red-500">*</span></label>
-                        <input 
-                          className={`${inputClass} ${formErrors.sn ? 'border-red-500 focus:border-red-500 ring-1 ring-red-500/50' : ''}`}
-                          value={formData.sn || ''} 
-                          placeholder="Sensor SN" 
-                          onChange={e => {
-                            setFormData({...formData, sn: e.target.value});
-                            if (formErrors.sn) setFormErrors({...formErrors, sn: false});
-                          }} 
-                        />
-                      </div>
+                      <div><label className={labelClass}>硬件型号</label><select className={inputClass} value={formData.type || ''} onChange={e => { setFormData(prev => ({...prev, type: e.target.value})); setSensorTypeRead(false); setReadError(null); }}><option value="">选择型号</option><option value="SFPD-A1">SFPD-A1 (UHF+TEV)</option><option value="SFPD-A2">SFPD-A2 (双HFCT)</option><option value="SFPD-B1">SFPD-B1 (AE+UHF)</option><option value="SFPD-B2">SFPD-B2 (温湿度)</option></select></div>
+                      <div><label className={labelClass}>传感节点 SN <span className="text-red-500">*</span></label><input className={`${inputClass} ${formErrors.sn ? 'border-red-500 focus:border-red-500 ring-1 ring-red-500/50' : ''}`} value={formData.sn || ''} placeholder="Sensor SN" onChange={e => { setFormData({...formData, sn: e.target.value}); if (formErrors.sn) setFormErrors({...formErrors, sn: false}); }} /></div>
                     </div>
-
                     <div className="grid grid-cols-2 gap-4">
-                       <div>
-                        <label className={labelClass}>关联工控机 <span className="text-red-500">*</span></label>
-                        <select 
-                            className={`${inputClass} ${formErrors.ipcId ? 'border-red-500 focus:border-red-500 ring-1 ring-red-500/50' : ''}`}
-                            value={formData.ipcId || ''} 
-                            onChange={e => {
-                                setFormData(prev => ({...prev, ipcId: e.target.value}));
-                                setReadError(null);
-                                if (formErrors.ipcId) setFormErrors({...formErrors, ipcId: false});
-                            }}
-                        >
-                          <option value="">请选择工控机</option>
-                          {ipcs.map(i => <option key={i.id} value={i.id}>{i.name}</option>)}
-                        </select>
-                      </div>
+                       <div><label className={labelClass}>关联工控机 <span className="text-red-500">*</span></label><select className={`${inputClass} ${formErrors.ipcId ? 'border-red-500 focus:border-red-500 ring-1 ring-red-500/50' : ''}`} value={formData.ipcId || ''} onChange={e => { setFormData(prev => ({...prev, ipcId: e.target.value})); setReadError(null); if (formErrors.ipcId) setFormErrors({...formErrors, ipcId: false}); }}><option value="">请选择工控机</option>{ipcs.map(i => <option key={i.id} value={i.id}>{i.name}</option>)}</select></div>
                       <div><label className={labelClass}>传感节点名称</label><input className={inputClass} value={formData.name || ''} placeholder="显示名称" onChange={e => setFormData({...formData, name: e.target.value})} /></div>
                     </div>
-
                     <div className="grid grid-cols-2 gap-4">
-                      <div>
-                        <label className={labelClass}>关联项目 <span className="text-red-500">*</span></label>
-                        <select 
-                          className={`${inputClass} ${formErrors.projectId ? 'border-red-500 focus:border-red-500 ring-1 ring-red-500/50' : ''}`}
-                          value={formData.projectId || ''} 
-                          onChange={e => {
-                            setFormData({...formData, projectId: e.target.value});
-                            if (formErrors.projectId) setFormErrors({...formErrors, projectId: false});
-                          }}
-                        >
-                          <option value="">请选择项目</option>
-                          {projects.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
-                        </select>
-                      </div>
-                      <div>
-                        <label className={labelClass}>关联设备 <span className="text-red-500">*</span></label>
-                        <select 
-                          className={`${inputClass} ${formErrors.deviceId ? 'border-red-500 focus:border-red-500 ring-1 ring-red-500/50' : ''}`}
-                          value={formData.deviceId || ''} 
-                          onChange={e => {
-                            setFormData({...formData, deviceId: e.target.value});
-                            if (formErrors.deviceId) setFormErrors({...formErrors, deviceId: false});
-                          }}
-                        >
-                          <option value="">请选择设备</option>
-                          {devices.filter(d => !formData.projectId || d.projectId === formData.projectId).map(d => <option key={d.id} value={d.id}>{d.name}</option>)}
-                        </select>
-                      </div>
+                      <div><label className={labelClass}>关联项目 <span className="text-red-500">*</span></label><select className={`${inputClass} ${formErrors.projectId ? 'border-red-500 focus:border-red-500 ring-1 ring-red-500/50' : ''}`} value={formData.projectId || ''} onChange={e => { setFormData({...formData, projectId: e.target.value}); if (formErrors.projectId) setFormErrors({...formErrors, projectId: false}); }}><option value="">请选择项目</option>{projects.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}</select></div>
+                      <div><label className={labelClass}>关联设备 <span className="text-red-500">*</span></label><select className={`${inputClass} ${formErrors.deviceId ? 'border-red-500 focus:border-red-500 ring-1 ring-red-500/50' : ''}`} value={formData.deviceId || ''} onChange={e => { setFormData({...formData, deviceId: e.target.value}); if (formErrors.deviceId) setFormErrors({...formErrors, deviceId: false}); }}><option value="">请选择设备</option>{devices.filter(d => !formData.projectId || d.projectId === formData.projectId).map(d => <option key={d.id} value={d.id}>{d.name}</option>)}</select></div>
                     </div>
-
-                    {/* Button to Read Sensor Type */}
                     <div className="flex flex-col gap-2">
-                        {readError && (
-                            <div className="flex items-center gap-2 text-xs text-red-500 font-bold bg-red-500/10 p-2 rounded-lg border border-red-500/20 animate-fadeIn">
-                                <AlertCircle size={14} />
-                                {readError}
-                            </div>
-                        )}
-                        <button 
-                            onClick={handleReadSensorType}
-                            disabled={isReadingSensor}
-                            className={`w-full py-3 rounded-xl border flex items-center justify-center gap-2 font-bold transition-all
-                                ${isReadingSensor ? 'cursor-not-allowed opacity-80' : 'hover:scale-[0.99] active:scale-[0.97]'}
-                                ${sensorTypeRead 
-                                    ? (isDark ? 'bg-green-500/20 border-green-500 text-green-400 hover:bg-green-500/30' : 'bg-green-100 border-green-500 text-green-700 hover:bg-green-200')
-                                    : (isDark ? 'bg-blue-600 text-white border-blue-500 shadow-lg shadow-blue-500/20' : 'bg-blue-600 text-white border-blue-500 shadow-lg shadow-blue-500/20')}
-                            `}
-                        >
-                            {isReadingSensor ? (
-                                <>
-                                    <Loader2 size={18} className="animate-spin" />
-                                    正在读取固件信息...
-                                </>
-                            ) : sensorTypeRead ? (
-                                <>
-                                    <CheckCircle2 size={18} />
-                                    已成功读取 (点击重新获取)
-                                </>
-                            ) : (
-                                <>
-                                    <Scan size={18} />
-                                    读取传感节点类型
-                                </>
-                            )}
+                        {readError && (<div className="flex items-center gap-2 text-xs text-red-500 font-bold bg-red-500/10 p-2 rounded-lg border border-red-500/20 animate-fadeIn"><AlertCircle size={14} />{readError}</div>)}
+                        <button onClick={handleReadSensorType} disabled={isReadingSensor} className={`w-full py-3 rounded-xl border flex items-center justify-center gap-2 font-bold transition-all ${isReadingSensor ? 'cursor-not-allowed opacity-80' : 'hover:scale-[0.99] active:scale-[0.97]'} ${sensorTypeRead ? (isDark ? 'bg-green-500/20 border-green-500 text-green-400 hover:bg-green-500/30' : 'bg-green-100 border-green-500 text-green-700 hover:bg-green-200') : (isDark ? 'bg-blue-600 text-white border-blue-500 shadow-lg shadow-blue-500/20' : 'bg-blue-600 text-white border-blue-500 shadow-lg shadow-blue-500/20')}`}>
+                            {isReadingSensor ? <><Loader2 size={18} className="animate-spin" />正在读取固件信息...</> : sensorTypeRead ? <><CheckCircle2 size={18} />已成功读取 (点击重新获取)</> : <><Scan size={18} />读取传感节点类型</>}
                         </button>
                     </div>
-
                     {sensorTypeRead && (
                         <div className="p-4 rounded-xl border bg-opacity-5 space-y-4 animate-fadeIn" style={{ backgroundColor: isDark ? 'rgba(255,255,255,0.02)' : 'rgba(0,0,0,0.02)', borderColor: isDark ? '#334155' : '#e2e8f0' }}>
                           <label className={labelClass}>配置模态通道与安装位置</label>
@@ -811,33 +642,8 @@ const AccessConfig: React.FC<AccessConfigProps> = ({
                               const isSelected = !!channelConfig;
                               return (
                                 <div key={ch} className="flex items-center gap-4 group">
-                                  <button 
-                                    onClick={() => toggleSensorChannel(ch)}
-                                    className={`w-10 h-10 rounded-lg flex-shrink-0 flex items-center justify-center transition-all border
-                                      ${isSelected 
-                                        ? 'bg-blue-600 border-blue-600 text-white shadow-lg shadow-blue-500/20' 
-                                        : (isDark ? 'bg-slate-800 border-slate-700 text-slate-500' : 'bg-gray-100 border-gray-200 text-gray-400')}`}
-                                  >
-                                    {isSelected ? <Check size={18} /> : <span className="text-[10px] font-bold opacity-50">{ch.substring(0, 1)}</span>}
-                                  </button>
-                                  <div className="flex-1 min-w-0">
-                                    <div className="flex justify-between items-center mb-1">
-                                      <span className={`text-xs font-bold ${isSelected ? (isDark ? 'text-blue-400' : 'text-blue-600') : 'opacity-40'}`}>{ch}</span>
-                                    </div>
-                                    {isSelected ? (
-                                      <div className="relative animate-fadeIn">
-                                        <MapPin size={14} className={`absolute left-3 top-2.5 ${isDark ? 'text-blue-400' : 'text-blue-600'}`} />
-                                        <input 
-                                          className={`${inputClass} pl-10 h-9 text-xs py-1`}
-                                          placeholder={`输入 ${ch} 通道的安装位置...`}
-                                          value={channelConfig.location}
-                                          onChange={(e) => updateChannelLocation(ch, e.target.value)}
-                                        />
-                                      </div>
-                                    ) : (
-                                      <div className="h-9 flex items-center text-[10px] opacity-20 italic">未启用该通道</div>
-                                    )}
-                                  </div>
+                                  <button onClick={() => toggleSensorChannel(ch)} className={`w-10 h-10 rounded-lg flex-shrink-0 flex items-center justify-center transition-all border ${isSelected ? 'bg-blue-600 border-blue-600 text-white shadow-lg shadow-blue-500/20' : (isDark ? 'bg-slate-800 border-slate-700 text-slate-500' : 'bg-gray-100 border-gray-200 text-gray-400')}`}>{isSelected ? <Check size={18} /> : <span className="text-[10px] font-bold opacity-50">{ch.substring(0, 1)}</span>}</button>
+                                  <div className="flex-1 min-w-0"><div className="flex justify-between items-center mb-1"><span className={`text-xs font-bold ${isSelected ? (isDark ? 'text-blue-400' : 'text-blue-600') : 'opacity-40'}`}>{ch}</span></div>{isSelected ? (<div className="relative animate-fadeIn"><MapPin size={14} className={`absolute left-3 top-2.5 ${isDark ? 'text-blue-400' : 'text-blue-600'}`} /><input className={`${inputClass} pl-10 h-9 text-xs py-1`} placeholder={`输入 ${ch} 通道的安装位置...`} value={channelConfig.location} onChange={(e) => updateChannelLocation(ch, e.target.value)} /></div>) : (<div className="h-9 flex items-center text-[10px] opacity-20 italic">未启用该通道</div>)}</div>
                                 </div>
                               );
                             })}
@@ -847,17 +653,9 @@ const AccessConfig: React.FC<AccessConfigProps> = ({
                   </>
                 )}
               </div>
-
               <div className={`p-4 border-t flex justify-end gap-3 ${isDark ? 'bg-slate-800/30 border-slate-800' : 'bg-gray-50'}`}>
                 <button onClick={() => setShowForm(false)} className={`px-6 py-2.5 rounded-lg font-bold transition-colors ${isDark ? 'text-slate-300 hover:bg-slate-800' : 'text-slate-600 hover:bg-gray-200'}`}>取消</button>
-                <button 
-                  onClick={handleSave} 
-                  disabled={isSaving}
-                  className="bg-blue-600 text-white px-10 py-2.5 rounded-lg font-bold flex items-center gap-2 disabled:opacity-50 shadow-lg shadow-blue-500/20 active:scale-95 transition-all"
-                >
-                  {isSaving ? <CheckCircle2 size={18} className="animate-pulse" /> : <Save size={18} />}
-                  {isSaving ? '正在保存...' : '保存配置'}
-                </button>
+                <button onClick={handleSave} disabled={isSaving} className="bg-blue-600 text-white px-10 py-2.5 rounded-lg font-bold flex items-center gap-2 disabled:opacity-50 shadow-lg shadow-blue-500/20 active:scale-95 transition-all">{isSaving ? <CheckCircle2 size={18} className="animate-pulse" /> : <Save size={18} />}{isSaving ? '正在保存...' : '保存配置'}</button>
               </div>
             </div>
           </div>
@@ -866,44 +664,12 @@ const AccessConfig: React.FC<AccessConfigProps> = ({
         {viewingChannelsSensor && (
           <div className="fixed inset-0 z-[120] flex items-center justify-center bg-black/50 backdrop-blur-md p-6 animate-fadeIn">
             <div className={`w-full max-w-lg rounded-2xl shadow-2xl flex flex-col overflow-hidden border ${isDark ? 'bg-slate-900 border-slate-700' : 'bg-white border-gray-200'}`}>
-               <div className={`px-6 py-4 border-b flex justify-between items-center ${isDark ? 'border-slate-800 bg-slate-800/50' : 'bg-gray-50 border-gray-100'}`}>
-                 <div className="flex items-center gap-3">
-                    <Layers size={18} className="text-blue-500" />
-                    <h3 className={`font-bold ${isDark ? 'text-white' : 'text-slate-800'}`}>通道模态详情</h3>
-                 </div>
-                 <button onClick={() => setViewingChannelsSensor(null)} className={`p-1.5 rounded-full hover:bg-black/10 transition-colors ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
-                   <X size={20} />
-                 </button>
-               </div>
+               <div className={`px-6 py-4 border-b flex justify-between items-center ${isDark ? 'border-slate-800 bg-slate-800/50' : 'bg-gray-50 border-gray-100'}`}><div className="flex items-center gap-3"><Layers size={18} className="text-blue-500" /><h3 className={`font-bold ${isDark ? 'text-white' : 'text-slate-800'}`}>通道模态详情</h3></div><button onClick={() => setViewingChannelsSensor(null)} className={`p-1.5 rounded-full hover:bg-black/10 transition-colors ${isDark ? 'text-slate-400' : 'text-slate-500'}`}><X size={20} /></button></div>
                <div className="p-6 space-y-4">
-                  <div className="flex justify-between items-center pb-4 border-b border-gray-500/10">
-                    <div>
-                      <div className="text-[10px] uppercase font-black opacity-40 mb-1">传感节点 SN</div>
-                      <div className="font-mono text-sm font-bold">{viewingChannelsSensor.sn}</div>
-                    </div>
-                    <div className="text-right">
-                      <div className="text-[10px] uppercase font-black opacity-40 mb-1">节点名称</div>
-                      <div className="text-sm font-bold">{viewingChannelsSensor.name}</div>
-                    </div>
-                  </div>
-                  <div className="space-y-3">
-                    {viewingChannelsSensor.channels.map((chan, idx) => (
-                      <div key={idx} className={`p-3 rounded-lg border ${isDark ? 'bg-slate-800/40 border-slate-700' : 'bg-gray-50 border-gray-200'}`}>
-                        <div className="flex items-center gap-2 mb-1.5">
-                           <Waves size={14} className="text-blue-500" />
-                           <span className="text-xs font-black uppercase text-blue-500">{chan.type}</span>
-                        </div>
-                        <div className="flex items-center gap-2 text-sm">
-                           <MapPin size={12} className="opacity-40" />
-                           <span className="opacity-80">{chan.location || '未标注位置'}</span>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
+                  <div className="flex justify-between items-center pb-4 border-b border-gray-500/10"><div><div className="text-[10px] uppercase font-black opacity-40 mb-1">传感节点 SN</div><div className="font-mono text-sm font-bold">{viewingChannelsSensor.sn}</div></div><div className="text-right"><div className="text-[10px] uppercase font-black opacity-40 mb-1">节点名称</div><div className="text-sm font-bold">{viewingChannelsSensor.name}</div></div></div>
+                  <div className="space-y-3">{viewingChannelsSensor.channels.map((chan, idx) => (<div key={idx} className={`p-3 rounded-lg border ${isDark ? 'bg-slate-800/40 border-slate-700' : 'bg-gray-50 border-gray-200'}`}><div className="flex items-center gap-2 mb-1.5"><Waves size={14} className="text-blue-500" /><span className="text-xs font-black uppercase text-blue-500">{chan.type}</span></div><div className="flex items-center gap-2 text-sm"><MapPin size={12} className="opacity-40" /><span className="opacity-80">{chan.location || '未标注位置'}</span></div></div>))}</div>
                </div>
-               <div className={`p-4 border-t text-center ${isDark ? 'border-slate-800' : 'border-gray-100'}`}>
-                  <button onClick={() => setViewingChannelsSensor(null)} className="px-8 py-2 bg-blue-600 text-white rounded-lg font-bold text-sm shadow-lg shadow-blue-500/20 active:scale-95 transition-all">确认</button>
-               </div>
+               <div className={`p-4 border-t text-center ${isDark ? 'border-slate-800' : 'border-gray-100'}`}><button onClick={() => setViewingChannelsSensor(null)} className="px-8 py-2 bg-blue-600 text-white rounded-lg font-bold text-sm shadow-lg shadow-blue-500/20 active:scale-95 transition-all">确认</button></div>
             </div>
           </div>
         )}
@@ -916,7 +682,6 @@ const AccessConfig: React.FC<AccessConfigProps> = ({
               const sensorCount = sensors.filter(s => s.projectId === p.id).length;
               const projectIpcIds = new Set(sensors.filter(s => s.projectId === p.id).map(s => s.ipcId));
               const ipcCount = projectIpcIds.size;
-
               return (
                 <div key={p.id} className={cardClass}>
                   <div className="flex justify-between items-start mb-4">
@@ -927,26 +692,9 @@ const AccessConfig: React.FC<AccessConfigProps> = ({
                     </div>
                   </div>
                   <h4 className={`text-lg font-bold mb-1 truncate ${isDark ? 'text-white' : 'text-slate-800'}`}>{p.name}</h4>
-                  <div className="flex items-center gap-2 mb-4">
-                    <span className="text-[10px] font-black uppercase px-2 py-0.5 rounded bg-blue-500/10 text-blue-400 border border-blue-500/20">{p.type}</span>
-                  </div>
+                  <div className="flex items-center gap-2 mb-4"><span className="text-[10px] font-black uppercase px-2 py-0.5 rounded bg-blue-500/10 text-blue-400 border border-blue-500/20">{p.type}</span></div>
                   <p className={`text-xs opacity-60 mb-auto line-clamp-2 h-8 ${isDark ? 'text-slate-300' : 'text-slate-600'}`}>{p.description || '暂无描述信息'}</p>
-                  
-                  <div className="pt-4 border-t border-dashed border-gray-500/20 grid grid-cols-3 gap-2 mt-4">
-                    <div className="flex flex-col">
-                        <span className="text-[9px] opacity-40 uppercase font-black">资产设备</span>
-                        <span className={`text-sm font-black ${isDark ? 'text-slate-100' : 'text-slate-800'}`}>{deviceCount} 台</span>
-                    </div>
-                    <div className="flex flex-col border-x border-gray-500/10 px-2 text-center">
-                        <span className="text-[9px] opacity-40 uppercase font-black">工控机</span>
-                        <span className={`text-sm font-black ${isDark ? 'text-slate-100' : 'text-slate-800'}`}>{ipcCount} 台</span>
-                    </div>
-                    <div className="flex flex-col pl-2 text-right">
-                        <span className="text-[9px] opacity-40 uppercase font-black">传感节点</span>
-                        <span className={`text-sm font-black ${isDark ? 'text-slate-100' : 'text-slate-800'}`}>{sensorCount} 个</span>
-                    </div>
-                  </div>
-                  
+                  <div className="pt-4 border-t border-dashed border-gray-500/20 grid grid-cols-3 gap-2 mt-4"><div className="flex flex-col"><span className="text-[9px] opacity-40 uppercase font-black">资产设备</span><span className={`text-sm font-black ${isDark ? 'text-slate-100' : 'text-slate-800'}`}>{deviceCount} 台</span></div><div className="flex flex-col border-x border-gray-500/10 px-2 text-center"><span className="text-[9px] opacity-40 uppercase font-black">工控机</span><span className={`text-sm font-black ${isDark ? 'text-slate-100' : 'text-slate-800'}`}>{ipcCount} 台</span></div><div className="flex flex-col pl-2 text-right"><span className="text-[9px] opacity-40 uppercase font-black">传感节点</span><span className={`text-sm font-black ${isDark ? 'text-slate-100' : 'text-slate-800'}`}>{sensorCount} 个</span></div></div>
                   <button onClick={() => setTopologyProject(p)} className="w-full mt-4 py-2 text-blue-500 hover:bg-blue-500/5 border border-transparent hover:border-blue-500/20 rounded-lg text-xs flex items-center justify-center gap-1 font-black transition-all">查看配置清单 <ChevronRight size={14}/></button>
                 </div>
               );
@@ -962,29 +710,16 @@ const AccessConfig: React.FC<AccessConfigProps> = ({
               return (
                 <div key={d.id} className={cardClass}>
                   <div className="flex justify-between items-start mb-4">
-                    <div className={`p-2 rounded-lg ${isDark ? 'bg-emerald-500/10 text-emerald-400' : 'bg-emerald-50 text-emerald-600'}`}>
-                      <HardDrive size={24} />
-                    </div>
+                    <div className={`p-2 rounded-lg ${isDark ? 'bg-emerald-500/10 text-emerald-400' : 'bg-emerald-50 text-emerald-600'}`}><HardDrive size={24} /></div>
                     <div className="flex gap-2">
                       <button onClick={() => startEdit('devices', d.id)} className={`p-1.5 rounded-lg transition-all ${isDark ? 'text-slate-400 hover:bg-slate-700 hover:text-white' : 'text-slate-400 hover:bg-gray-100 hover:text-slate-600'}`}><Pencil size={16} /></button>
                       <button onClick={() => handleDelete(d.id)} className="p-1.5 rounded-lg text-red-500 opacity-40 hover:opacity-100 hover:bg-red-500 hover:text-white transition-all"><Trash2 size={16} /></button>
                     </div>
                   </div>
                   <h4 className={`text-lg font-bold mb-1 truncate ${isDark ? 'text-white' : 'text-slate-800'}`}>{d.name}</h4>
-                  <div className="flex flex-col gap-1 mb-3">
-                     <span className={`text-xs font-bold ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>{d.deviceType}</span>
-                     {project && <span className="text-[10px] opacity-50 flex items-center gap-1"><FolderTree size={10} /> {project.name}</span>}
-                  </div>
-                  
-                  {d.image && (
-                     <div className="w-full h-24 rounded-lg overflow-hidden border border-gray-500/10 mb-3">
-                        <img src={d.image} className="w-full h-full object-cover opacity-80 hover:opacity-100 transition-opacity" alt="Device" />
-                     </div>
-                  )}
-
-                  <div className="mt-auto pt-3 border-t border-dashed border-gray-500/20 flex justify-between items-center">
-                     <span className="text-[10px] opacity-40 font-bold">DEVICE ID: {d.id.substring(0,8)}...</span>
-                  </div>
+                  <div className="flex flex-col gap-1 mb-3"><span className={`text-xs font-bold ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>{d.deviceType}</span>{project && <span className="text-[10px] opacity-50 flex items-center gap-1"><FolderTree size={10} /> {project.name}</span>}</div>
+                  {d.image && (<div className="w-full h-24 rounded-lg overflow-hidden border border-gray-500/10 mb-3"><img src={d.image} className="w-full h-full object-cover opacity-80 hover:opacity-100 transition-opacity" alt="Device" /></div>)}
+                  <div className="mt-auto pt-3 border-t border-dashed border-gray-500/20 flex justify-between items-center"><span className="text-[10px] opacity-40 font-bold">DEVICE ID: {d.id.substring(0,8)}...</span></div>
                 </div>
               );
             })}
@@ -996,26 +731,11 @@ const AccessConfig: React.FC<AccessConfigProps> = ({
             {ipcs.length === 0 && <EmptyState title="暂无工控机" desc="请添加工控机节点" icon={Cpu} />}
             {ipcs.map(i => (
               <div key={i.id} className={cardClass}>
-                <div className="flex justify-between items-start mb-4">
-                    <div className={`p-2 rounded-lg ${isDark ? 'bg-purple-500/10 text-purple-400' : 'bg-purple-50 text-purple-600'}`}>
-                      <Cpu size={24} />
-                    </div>
-                    <div className="flex gap-2">
-                      <button onClick={() => startEdit('ipcs', i.id)} className={`p-1.5 rounded-lg transition-all ${isDark ? 'text-slate-400 hover:bg-slate-700 hover:text-white' : 'text-slate-400 hover:bg-gray-100 hover:text-slate-600'}`}><Pencil size={16} /></button>
-                      <button onClick={() => handleDelete(i.id)} className="p-1.5 rounded-lg text-red-500 opacity-40 hover:opacity-100 hover:bg-red-500 hover:text-white transition-all"><Trash2 size={16} /></button>
-                    </div>
-                </div>
+                <div className="flex justify-between items-start mb-4"><div className={`p-2 rounded-lg ${isDark ? 'bg-purple-500/10 text-purple-400' : 'bg-purple-50 text-purple-600'}`}><Cpu size={24} /></div><div className="flex gap-2"><button onClick={() => startEdit('ipcs', i.id)} className={`p-1.5 rounded-lg transition-all ${isDark ? 'text-slate-400 hover:bg-slate-700 hover:text-white' : 'text-slate-400 hover:bg-gray-100 hover:text-slate-600'}`}><Pencil size={16} /></button><button onClick={() => handleDelete(i.id)} className="p-1.5 rounded-lg text-red-500 opacity-40 hover:opacity-100 hover:bg-red-500 hover:text-white transition-all"><Trash2 size={16} /></button></div></div>
                 <h4 className={`text-lg font-bold mb-1 truncate ${isDark ? 'text-white' : 'text-slate-800'}`}>{i.name}</h4>
-                <div className="flex items-center gap-2 mb-4">
-                    <div className={`px-2 py-0.5 rounded text-[10px] font-mono border ${isDark ? 'bg-slate-800 border-slate-700 text-purple-300' : 'bg-gray-100 border-gray-200 text-purple-700'}`}>
-                       IP: {i.ip}
-                    </div>
-                </div>
+                <div className="flex items-center gap-2 mb-4"><div className={`px-2 py-0.5 rounded text-[10px] font-mono border ${isDark ? 'bg-slate-800 border-slate-700 text-purple-300' : 'bg-gray-100 border-gray-200 text-purple-700'}`}>IP: {i.ip}</div></div>
                 <p className={`text-xs opacity-60 mb-auto line-clamp-2 h-8 ${isDark ? 'text-slate-300' : 'text-slate-600'}`}>{i.description || '暂无描述信息'}</p>
-                <div className="mt-4 pt-3 border-t border-dashed border-gray-500/20 flex justify-between items-center text-[10px]">
-                    <span className="opacity-40 font-bold">SN: {i.sn || 'Unknown'}</span>
-                    <span className="text-green-500 font-bold flex items-center gap-1"><Activity size={10} /> 在线</span>
-                </div>
+                <div className="mt-4 pt-3 border-t border-dashed border-gray-500/20 flex justify-between items-center text-[10px]"><span className="opacity-40 font-bold">SN: {i.sn || 'Unknown'}</span><span className="text-green-500 font-bold flex items-center gap-1"><Activity size={10} /> 在线</span></div>
               </div>
             ))}
           </div>
@@ -1029,43 +749,11 @@ const AccessConfig: React.FC<AccessConfigProps> = ({
               const ipc = ipcs.find(i => i.id === s.ipcId);
               return (
                 <div key={s.id} className={cardClass}>
-                   <div className="flex justify-between items-start mb-4">
-                      <div className={`p-2 rounded-lg ${isDark ? 'bg-cyan-500/10 text-cyan-400' : 'bg-cyan-50 text-cyan-600'}`}>
-                        <Radio size={24} />
-                      </div>
-                      <div className="flex gap-2">
-                        <button onClick={() => startEdit('sensors', s.id)} className={`p-1.5 rounded-lg transition-all ${isDark ? 'text-slate-400 hover:bg-slate-700 hover:text-white' : 'text-slate-400 hover:bg-gray-100 hover:text-slate-600'}`}><Pencil size={16} /></button>
-                        <button onClick={() => handleDelete(s.id)} className="p-1.5 rounded-lg text-red-500 opacity-40 hover:opacity-100 hover:bg-red-500 hover:text-white transition-all"><Trash2 size={16} /></button>
-                      </div>
-                   </div>
+                   <div className="flex justify-between items-start mb-4"><div className={`p-2 rounded-lg ${isDark ? 'bg-cyan-500/10 text-cyan-400' : 'bg-cyan-50 text-cyan-600'}`}><Radio size={24} /></div><div className="flex gap-2"><button onClick={() => startEdit('sensors', s.id)} className={`p-1.5 rounded-lg transition-all ${isDark ? 'text-slate-400 hover:bg-slate-700 hover:text-white' : 'text-slate-400 hover:bg-gray-100 hover:text-slate-600'}`}><Pencil size={16} /></button><button onClick={() => handleDelete(s.id)} className="p-1.5 rounded-lg text-red-500 opacity-40 hover:opacity-100 hover:bg-red-500 hover:text-white transition-all"><Trash2 size={16} /></button></div></div>
                    <h4 className={`text-lg font-bold mb-1 truncate ${isDark ? 'text-white' : 'text-slate-800'}`}>{s.name}</h4>
-                   <div className="flex items-center gap-2 mb-3">
-                      <span className={`text-[10px] px-2 py-0.5 rounded font-black border ${isDark ? 'bg-slate-800 border-slate-700 text-cyan-400' : 'bg-gray-100 border-gray-200 text-cyan-600'}`}>{s.type}</span>
-                      <span className="text-[10px] font-mono opacity-50">{s.sn}</span>
-                   </div>
-                   
-                   <div className="space-y-1 mb-4 text-xs">
-                      {device && (
-                        <div className="flex items-center gap-2 opacity-70">
-                           <HardDrive size={12} /> 所属设备: {device.name}
-                        </div>
-                      )}
-                      {ipc && (
-                        <div className="flex items-center gap-2 opacity-70">
-                           <Cpu size={12} /> 关联IPC: {ipc.name}
-                        </div>
-                      )}
-                   </div>
-
-                   <div className="mt-auto">
-                      <button 
-                        onClick={() => setViewingChannelsSensor(s)}
-                        className={`w-full py-2 rounded-lg border text-xs font-bold flex items-center justify-center gap-2 transition-all ${isDark ? 'bg-slate-800/50 border-slate-700 hover:bg-slate-700' : 'bg-gray-50 border-gray-200 hover:bg-gray-100'}`}
-                      >
-                         <Waves size={14} className="text-blue-500" />
-                         查看 {s.channels.length} 个监测通道
-                      </button>
-                   </div>
+                   <div className="flex items-center gap-2 mb-3"><span className={`text-[10px] px-2 py-0.5 rounded font-black border ${isDark ? 'bg-slate-800 border-slate-700 text-cyan-400' : 'bg-gray-100 border-gray-200 text-cyan-600'}`}>{s.type}</span><span className="text-[10px] font-mono opacity-50">{s.sn}</span></div>
+                   <div className="space-y-1 mb-4 text-xs">{device && (<div className="flex items-center gap-2 opacity-70"><HardDrive size={12} /> 所属设备: {device.name}</div>)}{ipc && (<div className="flex items-center gap-2 opacity-70"><Cpu size={12} /> 关联IPC: {ipc.name}</div>)}</div>
+                   <div className="mt-auto"><button onClick={() => setViewingChannelsSensor(s)} className={`w-full py-2 rounded-lg border text-xs font-bold flex items-center justify-center gap-2 transition-all ${isDark ? 'bg-slate-800/50 border-slate-700 hover:bg-slate-700' : 'bg-gray-50 border-gray-200 hover:bg-gray-100'}`}><Waves size={14} className="text-blue-500" />查看 {s.channels.length} 个监测通道</button></div>
                 </div>
               );
             })}

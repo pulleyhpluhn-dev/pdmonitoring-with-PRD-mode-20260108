@@ -228,8 +228,7 @@ const ReportModal: React.FC<ReportModalProps> = ({ device, allDevices, onClose, 
         {/* Report Content (Print Target) */}
         <div className="flex-1 overflow-y-auto custom-scrollbar bg-slate-100 p-8 print-content">
             <div className="w-full min-h-[297mm] bg-white shadow-sm p-10 mx-auto flex flex-col gap-8 print:shadow-none print:p-0">
-                
-                {/* 1. Header */}
+                {/* Header */}
                 <div className="border-b-2 border-slate-800 pb-4 mb-2 flex justify-between items-end">
                     <div>
                         <h1 className="text-3xl font-black text-slate-900 mb-2">GIS 局放监测诊断报告</h1>
@@ -237,11 +236,9 @@ const ReportModal: React.FC<ReportModalProps> = ({ device, allDevices, onClose, 
                     </div>
                     <div className="text-right">
                         <div className="text-xl font-bold text-slate-800">{device.station}</div>
-                        {/* Device ID removed as per request */}
                     </div>
                 </div>
-
-                {/* 2. Station Overview */}
+                {/* Station Overview */}
                 <section className="bg-slate-50 rounded-xl p-6 border border-slate-100 print:bg-transparent print:border-slate-200">
                     <h2 className="text-lg font-bold border-l-4 border-blue-600 pl-3 mb-6 flex items-center gap-2">
                         <LayoutGrid size={18} /> 全站设备状态总览
@@ -250,18 +247,8 @@ const ReportModal: React.FC<ReportModalProps> = ({ device, allDevices, onClose, 
                         <div className="w-1/3 h-48 relative">
                             <ResponsiveContainer width="100%" height="100%">
                                 <PieChart>
-                                    <Pie
-                                        data={chartData}
-                                        cx="50%"
-                                        cy="50%"
-                                        innerRadius={40}
-                                        outerRadius={70}
-                                        paddingAngle={5}
-                                        dataKey="value"
-                                    >
-                                        {chartData.map((entry, index) => (
-                                            <Cell key={`cell-${index}`} fill={entry.color} stroke="none" />
-                                        ))}
+                                    <Pie data={chartData} cx="50%" cy="50%" innerRadius={40} outerRadius={70} paddingAngle={5} dataKey="value">
+                                        {chartData.map((entry, index) => <Cell key={`cell-${index}`} fill={entry.color} stroke="none" />)}
                                     </Pie>
                                 </PieChart>
                             </ResponsiveContainer>
@@ -285,20 +272,14 @@ const ReportModal: React.FC<ReportModalProps> = ({ device, allDevices, onClose, 
                         </div>
                     </div>
                 </section>
-
-                {/* 3. Current Device Detail */}
+                {/* Device Detail */}
                 <section>
                     <h2 className="text-lg font-bold border-l-4 border-blue-600 pl-3 mb-6 flex items-center gap-2">
                         <Activity size={18} /> 当前设备监测详情
                     </h2>
-                    
                     <div className="mb-6 flex gap-6">
                         <div className="w-32 h-32 bg-slate-100 rounded-lg border border-slate-200 flex items-center justify-center overflow-hidden">
-                             {device.customImage ? (
-                                 <img src={device.customImage} className="w-full h-full object-cover" alt="Device" />
-                             ) : (
-                                 <Activity size={40} className="text-slate-300" />
-                             )}
+                             {device.customImage ? <img src={device.customImage} className="w-full h-full object-cover" alt="Device" /> : <Activity size={40} className="text-slate-300" />}
                         </div>
                         <div className="flex-1 space-y-3">
                             <div className="grid grid-cols-2 gap-4">
@@ -314,12 +295,7 @@ const ReportModal: React.FC<ReportModalProps> = ({ device, allDevices, onClose, 
                             <div className="flex items-center gap-3 p-3 bg-slate-50 rounded-lg border border-slate-100">
                                 <div className="text-xs text-slate-400 font-bold uppercase whitespace-nowrap">当前状态:</div>
                                 <div className="flex flex-col gap-1">
-                                    <div className={`w-fit px-3 py-1 rounded-md text-xs font-black text-white ${
-                                        device.status === AlarmLevel.CRITICAL ? 'bg-red-600' : 
-                                        device.status === AlarmLevel.DANGER ? 'bg-orange-500' :
-                                        device.status === AlarmLevel.WARNING ? 'bg-yellow-500' :
-                                        device.status === AlarmLevel.NORMAL ? 'bg-green-500' : 'bg-slate-400'
-                                    }`}>
+                                    <div className={`w-fit px-3 py-1 rounded-md text-xs font-black text-white ${device.status === AlarmLevel.CRITICAL ? 'bg-red-600' : device.status === AlarmLevel.DANGER ? 'bg-orange-500' : device.status === AlarmLevel.WARNING ? 'bg-yellow-500' : device.status === AlarmLevel.NORMAL ? 'bg-green-500' : 'bg-slate-400'}`}>
                                         {getStatusDisplay(device.status).label}
                                     </div>
                                     <div className="text-[10px] text-slate-500 font-medium">{getStatusDisplay(device.status).desc}</div>
@@ -327,106 +303,50 @@ const ReportModal: React.FC<ReportModalProps> = ({ device, allDevices, onClose, 
                             </div>
                         </div>
                     </div>
-
                     <div className="border rounded-xl overflow-hidden border-slate-200">
                         <table className="w-full text-sm text-left">
                             <thead className="bg-slate-100 text-slate-600 font-bold border-b border-slate-200">
                                 <tr>
-                                    <th className="px-4 py-3">监测指标</th>
-                                    <th className="px-4 py-3">当前数值</th>
-                                    <th className="px-4 py-3">频次/单位</th>
-                                    <th className="px-4 py-3">状态评价</th>
+                                    <th className="px-4 py-3">监测指标</th><th className="px-4 py-3">当前数值</th><th className="px-4 py-3">频次/单位</th><th className="px-4 py-3">状态评价</th>
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-slate-100 text-slate-700">
-                                <tr>
-                                    <td className="px-4 py-3 font-bold">UHF 特高频</td>
-                                    <td className="px-4 py-3 font-mono">{device.status !== AlarmLevel.NO_DATA ? device.uhf_amp : '--'} dBmV</td>
-                                    <td className="px-4 py-3 font-mono">{device.status !== AlarmLevel.NO_DATA ? device.uhf_freq : '--'} 次/秒</td>
-                                    <td className="px-4 py-3"><span className="text-green-600 font-bold">正常</span></td>
-                                </tr>
-                                <tr>
-                                    <td className="px-4 py-3 font-bold">TEV 暂态地电压</td>
-                                    <td className="px-4 py-3 font-mono">{device.status !== AlarmLevel.NO_DATA ? device.tev_amp : '--'} dBmV</td>
-                                    <td className="px-4 py-3 font-mono">{device.status !== AlarmLevel.NO_DATA ? device.tev_freq : '--'} 次/秒</td>
-                                    <td className="px-4 py-3">
-                                        {device.status === AlarmLevel.CRITICAL || device.status === AlarmLevel.DANGER ? (
-                                            <span className="text-red-500 font-bold">异常</span>
-                                        ) : (
-                                            <span className="text-green-600 font-bold">正常</span>
-                                        )}
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td className="px-4 py-3 font-bold">HFCT 高频电流</td>
-                                    <td className="px-4 py-3 font-mono">{device.status !== AlarmLevel.NO_DATA ? device.hfct_amp : '--'} dBmV</td>
-                                    <td className="px-4 py-3 font-mono">{device.status !== AlarmLevel.NO_DATA ? device.hfct_freq : '--'} 次/秒</td>
-                                    <td className="px-4 py-3"><span className="text-green-600 font-bold">正常</span></td>
-                                </tr>
-                                <tr>
-                                    <td className="px-4 py-3 font-bold">环境温湿度</td>
-                                    <td className="px-4 py-3 font-mono">{device.status !== AlarmLevel.NO_DATA ? device.temp : '--'} °C</td>
-                                    <td className="px-4 py-3 font-mono">{device.status !== AlarmLevel.NO_DATA ? device.humidity : '--'} %</td>
-                                    <td className="px-4 py-3"><span className="text-green-600 font-bold">适宜</span></td>
-                                </tr>
+                                <tr><td className="px-4 py-3 font-bold">UHF 特高频</td><td className="px-4 py-3 font-mono">{device.status !== AlarmLevel.NO_DATA ? device.uhf_amp : '--'} dBmV</td><td className="px-4 py-3 font-mono">{device.status !== AlarmLevel.NO_DATA ? device.uhf_freq : '--'} 次/秒</td><td className="px-4 py-3"><span className="text-green-600 font-bold">正常</span></td></tr>
+                                <tr><td className="px-4 py-3 font-bold">TEV 暂态地电压</td><td className="px-4 py-3 font-mono">{device.status !== AlarmLevel.NO_DATA ? device.tev_amp : '--'} dBmV</td><td className="px-4 py-3 font-mono">{device.status !== AlarmLevel.NO_DATA ? device.tev_freq : '--'} 次/秒</td><td className="px-4 py-3">{device.status === AlarmLevel.CRITICAL || device.status === AlarmLevel.DANGER ? <span className="text-red-500 font-bold">异常</span> : <span className="text-green-600 font-bold">正常</span>}</td></tr>
+                                <tr><td className="px-4 py-3 font-bold">HFCT 高频电流</td><td className="px-4 py-3 font-mono">{device.status !== AlarmLevel.NO_DATA ? device.hfct_amp : '--'} dBmV</td><td className="px-4 py-3 font-mono">{device.status !== AlarmLevel.NO_DATA ? device.hfct_freq : '--'} 次/秒</td><td className="px-4 py-3"><span className="text-green-600 font-bold">正常</span></td></tr>
+                                <tr><td className="px-4 py-3 font-bold">环境温湿度</td><td className="px-4 py-3 font-mono">{device.status !== AlarmLevel.NO_DATA ? device.temp : '--'} °C</td><td className="px-4 py-3 font-mono">{device.status !== AlarmLevel.NO_DATA ? device.humidity : '--'} %</td><td className="px-4 py-3"><span className="text-green-600 font-bold">适宜</span></td></tr>
                             </tbody>
                         </table>
                     </div>
                 </section>
-
-                {/* 4. Insulation Degradation Analysis (NEW SECTION) */}
+                {/* MA Analysis */}
                 <section className="bg-slate-50 rounded-xl p-6 border border-slate-100 print:bg-transparent print:border-slate-200">
-                    <h2 className="text-lg font-bold border-l-4 border-blue-600 pl-3 mb-6 flex items-center gap-2">
-                        <BarChart2 size={18} /> 绝缘劣化态势分析
-                    </h2>
-                    
+                    <h2 className="text-lg font-bold border-l-4 border-blue-600 pl-3 mb-6 flex items-center gap-2"><BarChart2 size={18} /> 绝缘劣化态势分析</h2>
                     <div className="flex flex-col gap-6">
-                        {/* Metrics Cards */}
                         <div className="grid grid-cols-3 gap-4">
                             <div className="p-4 rounded-xl bg-white border border-slate-200 shadow-sm">
                                 <div className="text-[10px] text-slate-400 font-bold uppercase tracking-wider mb-2">7日移动平均 (MA7)</div>
-                                <div className="flex items-baseline justify-between">
-                                    <span className="text-xl font-black text-slate-800">{trendMetrics.d7.value} <span className="text-xs font-normal text-slate-400">dBmV</span></span>
-                                    <GrowthIndicator value={trendMetrics.d7.growth} />
-                                </div>
-                                <div className="mt-2 h-1 w-full bg-slate-100 rounded-full overflow-hidden">
-                                    <div className={`h-full rounded-full ${trendMetrics.d7.growth > 5 ? 'bg-red-500' : 'bg-blue-500'}`} style={{ width: '40%' }}></div>
-                                </div>
+                                <div className="flex items-baseline justify-between"><span className="text-xl font-black text-slate-800">{trendMetrics.d7.value} <span className="text-xs font-normal text-slate-400">dBmV</span></span><GrowthIndicator value={trendMetrics.d7.growth} /></div>
+                                <div className="mt-2 h-1 w-full bg-slate-100 rounded-full overflow-hidden"><div className={`h-full rounded-full ${trendMetrics.d7.growth > 5 ? 'bg-red-500' : 'bg-blue-500'}`} style={{ width: '40%' }}></div></div>
                             </div>
                             <div className="p-4 rounded-xl bg-white border border-slate-200 shadow-sm">
                                 <div className="text-[10px] text-slate-400 font-bold uppercase tracking-wider mb-2">30日移动平均 (MA30)</div>
-                                <div className="flex items-baseline justify-between">
-                                    <span className="text-xl font-black text-slate-800">{trendMetrics.d30.value} <span className="text-xs font-normal text-slate-400">dBmV</span></span>
-                                    <GrowthIndicator value={trendMetrics.d30.growth} />
-                                </div>
-                                <div className="mt-2 h-1 w-full bg-slate-100 rounded-full overflow-hidden">
-                                    <div className={`h-full rounded-full ${trendMetrics.d30.growth > 5 ? 'bg-red-500' : 'bg-purple-500'}`} style={{ width: '60%' }}></div>
-                                </div>
+                                <div className="flex items-baseline justify-between"><span className="text-xl font-black text-slate-800">{trendMetrics.d30.value} <span className="text-xs font-normal text-slate-400">dBmV</span></span><GrowthIndicator value={trendMetrics.d30.growth} /></div>
+                                <div className="mt-2 h-1 w-full bg-slate-100 rounded-full overflow-hidden"><div className={`h-full rounded-full ${trendMetrics.d30.growth > 5 ? 'bg-red-500' : 'bg-purple-500'}`} style={{ width: '60%' }}></div></div>
                             </div>
                             <div className="p-4 rounded-xl bg-white border border-slate-200 shadow-sm">
                                 <div className="text-[10px] text-slate-400 font-bold uppercase tracking-wider mb-2">90日长期趋势 (MA90)</div>
-                                <div className="flex items-baseline justify-between">
-                                    <span className="text-xl font-black text-slate-800">{trendMetrics.d90.value} <span className="text-xs font-normal text-slate-400">dBmV</span></span>
-                                    <GrowthIndicator value={trendMetrics.d90.growth} />
-                                </div>
-                                <div className="mt-2 h-1 w-full bg-slate-100 rounded-full overflow-hidden">
-                                    <div className={`h-full rounded-full ${trendMetrics.d90.growth > 5 ? 'bg-red-500' : 'bg-cyan-500'}`} style={{ width: '80%' }}></div>
-                                </div>
+                                <div className="flex items-baseline justify-between"><span className="text-xl font-black text-slate-800">{trendMetrics.d90.value} <span className="text-xs font-normal text-slate-400">dBmV</span></span><GrowthIndicator value={trendMetrics.d90.growth} /></div>
+                                <div className="mt-2 h-1 w-full bg-slate-100 rounded-full overflow-hidden"><div className={`h-full rounded-full ${trendMetrics.d90.growth > 5 ? 'bg-red-500' : 'bg-cyan-500'}`} style={{ width: '80%' }}></div></div>
                             </div>
                         </div>
-
-                        {/* Chart */}
                         <div className="h-64 w-full bg-white rounded-xl border border-slate-200 p-4">
                             <ResponsiveContainer width="100%" height="100%">
                                 <LineChart data={historyData} margin={{ top: 5, right: 20, bottom: 5, left: 0 }}>
                                     <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
                                     <XAxis dataKey="date" tick={{fontSize: 10, fill: '#64748b'}} tickLine={false} axisLine={false} minTickGap={30} />
                                     <YAxis tick={{fontSize: 10, fill: '#64748b'}} tickLine={false} axisLine={false} unit=" dB" domain={['auto', 'auto']} />
-                                    <RechartsTooltip 
-                                        contentStyle={{ backgroundColor: '#fff', borderRadius: '8px', border: '1px solid #e2e8f0', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
-                                        itemStyle={{ fontSize: '12px', fontWeight: 'bold' }}
-                                        labelStyle={{ fontSize: '12px', color: '#94a3b8', marginBottom: '4px' }}
-                                    />
+                                    <RechartsTooltip contentStyle={{ backgroundColor: '#fff', borderRadius: '8px', border: '1px solid #e2e8f0', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }} itemStyle={{ fontSize: '12px', fontWeight: 'bold' }} labelStyle={{ fontSize: '12px', color: '#94a3b8', marginBottom: '4px' }} />
                                     <Legend iconType="circle" wrapperStyle={{ fontSize: '12px', paddingTop: '10px' }} />
                                     <Line type="monotone" dataKey="value" stroke="#94a3b8" strokeWidth={1} dot={false} name="原始幅值" opacity={0.3} />
                                     <Line type="monotone" dataKey="ma7" stroke="#3b82f6" strokeWidth={2} dot={false} name="MA7 (短期)" />
@@ -437,28 +357,16 @@ const ReportModal: React.FC<ReportModalProps> = ({ device, allDevices, onClose, 
                         </div>
                         <div className="text-xs text-slate-500 leading-relaxed text-justify px-2">
                             <strong>分析说明：</strong> 
-                            {trendMetrics.d30.growth > 10 
-                                ? "MA30中期趋势显示明显上升迹象，表明设备绝缘性能正在加速劣化。建议立即结合TEV与超声波进行综合定位分析。" 
-                                : trendMetrics.d90.growth > 5 
-                                    ? "MA90长期趋势呈现缓慢上升，虽短期波动较小，但需关注绝缘老化累积效应。建议缩短巡检周期。" 
-                                    : "各周期移动平均曲线平稳，短期波动在正常范围内，未发现明显的绝缘劣化趋势。"}
+                            {trendMetrics.d30.growth > 10 ? "MA30中期趋势显示明显上升迹象，表明设备绝缘性能正在加速劣化。建议立即结合TEV与超声波进行综合定位分析。" : trendMetrics.d90.growth > 5 ? "MA90长期趋势呈现缓慢上升，虽短期波动较小，但需关注绝缘老化累积效应。建议缩短巡检周期。" : "各周期移动平均曲线平稳，短期波动在正常范围内，未发现明显的绝缘劣化趋势。"}
                         </div>
                     </div>
                 </section>
-
-                {/* 5. Conclusion */}
+                {/* Conclusion */}
                 <section className="mt-4 p-6 bg-blue-50 border border-blue-100 rounded-xl print:bg-transparent print:border-slate-300 print:border">
-                    <h3 className="font-bold text-slate-800 mb-2 flex items-center gap-2">
-                        <Info size={18} className="text-blue-600" /> 智能诊断结论与建议
-                    </h3>
-                    <p className="text-sm leading-relaxed text-slate-700 text-justify">
-                        {getDiagnosisText(device.status)}
-                    </p>
+                    <h3 className="font-bold text-slate-800 mb-2 flex items-center gap-2"><Info size={18} className="text-blue-600" /> 智能诊断结论与建议</h3>
+                    <p className="text-sm leading-relaxed text-slate-700 text-justify">{getDiagnosisText(device.status)}</p>
                 </section>
-
-                <div className="mt-auto pt-8 border-t border-slate-200 text-center text-xs text-slate-400 font-mono">
-                    System generated report. Powered by 500kV GIS Diagnosis System.
-                </div>
+                <div className="mt-auto pt-8 border-t border-slate-200 text-center text-xs text-slate-400 font-mono">System generated report. Powered by 500kV GIS Diagnosis System.</div>
             </div>
         </div>
       </div>
@@ -484,19 +392,15 @@ const MAAnalysisModal: React.FC<MAAnalysisModalProps> = ({ device, isDark, onClo
         const data = [];
         const today = new Date();
         
-        // Settings based on tab and device status
         let baseAmp = 15;
         let volatility = 5;
         let trend = 0;
 
-        // Simulate some variety based on channel
         if (activeTab === 'UHF') { baseAmp = 20; volatility = 8; }
         if (activeTab === 'TEV') { baseAmp = 25; volatility = 6; }
         if (activeTab === 'HFCT') { baseAmp = 10; volatility = 3; }
         if (activeTab === 'AE') { baseAmp = 5; volatility = 2; }
 
-        // Boost if device is in alarm (simplification: boost all channels if device alarm, 
-        // real app would check specific channel alarms)
         if (device.status === AlarmLevel.CRITICAL) { baseAmp += 30; trend = 0.3; }
         else if (device.status === AlarmLevel.DANGER) { baseAmp += 20; trend = 0.1; }
         else if (device.status === AlarmLevel.WARNING) { baseAmp += 10; trend = 0.05; }
@@ -504,12 +408,8 @@ const MAAnalysisModal: React.FC<MAAnalysisModalProps> = ({ device, isDark, onClo
         for (let i = 89; i >= 0; i--) {
             const date = new Date(today);
             date.setDate(date.getDate() - i);
-            
-            // Generate raw
             const x = 90 - i;
             let raw = baseAmp + (Math.random() - 0.5) * volatility + (x * trend);
-            
-            // Add some noise/spikes
             if (Math.random() > 0.9) raw += Math.random() * 10;
 
             data.push({
@@ -522,7 +422,6 @@ const MAAnalysisModal: React.FC<MAAnalysisModalProps> = ({ device, isDark, onClo
             });
         }
 
-        // Calculate MAs
         for (let i = 0; i < data.length; i++) {
             const calculateAvg = (days: number) => {
                 const start = Math.max(0, i - days + 1);
@@ -541,98 +440,51 @@ const MAAnalysisModal: React.FC<MAAnalysisModalProps> = ({ device, isDark, onClo
     return (
         <div className="fixed inset-0 z-[200] flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 animate-fadeIn">
             <div className={`w-full max-w-5xl h-[80vh] rounded-2xl shadow-2xl flex flex-col overflow-hidden border ${isDark ? 'bg-[#0f172a] border-slate-700' : 'bg-white border-gray-200'}`}>
-                
-                {/* Header */}
                 <div className={`px-6 py-4 border-b flex justify-between items-center ${isDark ? 'border-slate-800 bg-slate-900' : 'bg-gray-50 border-gray-100'}`}>
                     <div className="flex items-center gap-4">
-                        <div className={`p-2 rounded-lg ${isDark ? 'bg-blue-600/20 text-blue-400' : 'bg-blue-100 text-blue-600'}`}>
-                            <LineChartIcon size={20} />
-                        </div>
+                        <div className={`p-2 rounded-lg ${isDark ? 'bg-blue-600/20 text-blue-400' : 'bg-blue-100 text-blue-600'}`}><LineChartIcon size={20} /></div>
                         <div>
                             <h3 className={`font-bold text-lg ${isDark ? 'text-white' : 'text-slate-800'}`}>移动平均趋势分析 (MA Analysis)</h3>
-                            <div className={`text-xs opacity-60 flex gap-2 ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
-                                <span>{device.station}</span>
-                                <span>|</span>
-                                <span>{device.name}</span>
-                            </div>
+                            <div className={`text-xs opacity-60 flex gap-2 ${isDark ? 'text-slate-400' : 'text-slate-500'}`}><span>{device.station}</span><span>|</span><span>{device.name}</span></div>
                         </div>
                     </div>
-                    <button onClick={onClose} className={`p-2 rounded-full transition-colors ${isDark ? 'hover:bg-slate-800 text-slate-400' : 'hover:bg-gray-200 text-slate-500'}`}>
-                        <X size={24} />
-                    </button>
+                    <button onClick={onClose} className={`p-2 rounded-full transition-colors ${isDark ? 'hover:bg-slate-800 text-slate-400' : 'hover:bg-gray-200 text-slate-500'}`}><X size={24} /></button>
                 </div>
-
-                {/* Body */}
                 <div className="flex flex-1 overflow-hidden">
-                    {/* Sidebar Tabs */}
                     <div className={`w-48 flex-shrink-0 border-r p-4 flex flex-col gap-2 ${isDark ? 'border-slate-800 bg-slate-900/50' : 'border-gray-100 bg-gray-50'}`}>
                         <div className={`text-xs font-bold uppercase tracking-wider mb-2 opacity-50 ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>监测通道</div>
                         {['UHF', 'TEV', 'HFCT', 'AE'].map(tab => (
-                            <button
-                                key={tab}
-                                onClick={() => setActiveTab(tab as any)}
-                                className={`w-full text-left px-4 py-3 rounded-xl font-bold text-sm transition-all flex items-center justify-between group
-                                    ${activeTab === tab 
-                                        ? (isDark ? 'bg-blue-600 text-white shadow-lg shadow-blue-500/20' : 'bg-white text-blue-600 shadow-md border border-gray-100')
-                                        : (isDark ? 'text-slate-400 hover:bg-slate-800 hover:text-slate-200' : 'text-slate-500 hover:bg-white hover:shadow-sm')
-                                    }
-                                `}
-                            >
+                            <button key={tab} onClick={() => setActiveTab(tab as any)} className={`w-full text-left px-4 py-3 rounded-xl font-bold text-sm transition-all flex items-center justify-between group ${activeTab === tab ? (isDark ? 'bg-blue-600 text-white shadow-lg shadow-blue-500/20' : 'bg-white text-blue-600 shadow-md border border-gray-100') : (isDark ? 'text-slate-400 hover:bg-slate-800 hover:text-slate-200' : 'text-slate-500 hover:bg-white hover:shadow-sm')}`}>
                                 {tab}
                                 {activeTab === tab && <div className="w-1.5 h-1.5 rounded-full bg-current animate-pulse"></div>}
                             </button>
                         ))}
                     </div>
-
-                    {/* Chart Area */}
                     <div className="flex-1 p-6 flex flex-col relative min-w-0">
                         <div className={`absolute inset-0 opacity-5 pointer-events-none ${isDark ? 'bg-[radial-gradient(#3b82f6_1px,transparent_1px)] [background-size:16px_16px]' : 'bg-[radial-gradient(#cbd5e1_1px,transparent_1px)] [background-size:16px_16px]'}`}></div>
-                        
                         <div className="flex-1 w-full min-h-0 relative z-10">
                             <ResponsiveContainer width="100%" height="100%">
                                 <LineChart data={channelData} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
                                     <CartesianGrid strokeDasharray="3 3" vertical={false} stroke={isDark ? '#334155' : '#e2e8f0'} opacity={0.5} />
-                                    <XAxis 
-                                        dataKey="date" 
-                                        tick={{fontSize: 10, fill: isDark ? '#94a3b8' : '#64748b'}} 
-                                        tickLine={false} axisLine={false} minTickGap={50} 
-                                    />
-                                    <YAxis 
-                                        tick={{fontSize: 10, fill: isDark ? '#94a3b8' : '#64748b'}} 
-                                        tickLine={false} axisLine={false} unit=" dB" domain={['auto', 'auto']} 
-                                    />
-                                    <RechartsTooltip 
-                                        contentStyle={{ backgroundColor: isDark ? '#0f172a' : '#fff', borderRadius: '12px', border: `1px solid ${isDark ? '#334155' : '#e2e8f0'}`, boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)' }}
-                                        itemStyle={{ fontSize: '12px', fontWeight: 'bold' }}
-                                        labelStyle={{ fontSize: '12px', color: '#94a3b8', marginBottom: '8px' }}
-                                    />
+                                    <XAxis dataKey="date" tick={{fontSize: 10, fill: isDark ? '#94a3b8' : '#64748b'}} tickLine={false} axisLine={false} minTickGap={50} />
+                                    <YAxis tick={{fontSize: 10, fill: isDark ? '#94a3b8' : '#64748b'}} tickLine={false} axisLine={false} unit=" dB" domain={['auto', 'auto']} />
+                                    <RechartsTooltip contentStyle={{ backgroundColor: isDark ? '#0f172a' : '#fff', borderRadius: '12px', border: `1px solid ${isDark ? '#334155' : '#e2e8f0'}`, boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)' }} itemStyle={{ fontSize: '12px', fontWeight: 'bold' }} labelStyle={{ fontSize: '12px', color: '#94a3b8', marginBottom: '8px' }} />
                                     <Legend iconType="circle" wrapperStyle={{ paddingTop: '20px' }} />
-                                    
                                     <Line type="monotone" dataKey="raw" stroke={isDark ? '#475569' : '#cbd5e1'} strokeWidth={1} dot={false} name="原始数据 (Raw)" animationDuration={500} opacity={0.5} />
                                     <Line type="monotone" dataKey="ma7" stroke="#3b82f6" strokeWidth={2} dot={false} name="MA7 (短期趋势)" animationDuration={1000} />
                                     <Line type="monotone" dataKey="ma30" stroke="#8b5cf6" strokeWidth={2} dot={false} name="MA30 (中期趋势)" animationDuration={1500} />
                                     <Line type="monotone" dataKey="ma90" stroke="#06b6d4" strokeWidth={2} strokeDasharray="5 5" dot={false} name="MA90 (长期基线)" animationDuration={2000} />
-                                    
-                                    <Brush 
-                                        dataKey="date" 
-                                        height={30} 
-                                        stroke={isDark ? '#475569' : '#cbd5e1'}
-                                        fill={isDark ? '#1e293b' : '#f8fafc'}
-                                        tickFormatter={() => ''}
-                                    />
+                                    <Brush dataKey="date" height={30} stroke={isDark ? '#475569' : '#cbd5e1'} fill={isDark ? '#1e293b' : '#f8fafc'} tickFormatter={() => ''} />
                                 </LineChart>
                             </ResponsiveContainer>
                         </div>
-                        
                         <div className={`mt-4 p-4 rounded-xl border text-xs leading-relaxed flex gap-4 ${isDark ? 'bg-slate-900/50 border-slate-700' : 'bg-gray-50 border-gray-100'}`}>
                             <div className="p-2 rounded-lg bg-blue-500/10 text-blue-500 h-fit"><Info size={16} /></div>
                             <div>
                                 <h4 className={`font-bold mb-1 ${isDark ? 'text-white' : 'text-slate-800'}`}>趋势解读</h4>
                                 <p className={`opacity-80 ${isDark ? 'text-slate-300' : 'text-slate-600'}`}>
                                     当前展示 {activeTab} 通道的90天历史趋势。MA7（蓝色）反映短期波动，MA30（紫色）反映中期变化，MA90（青色虚线）代表长期基线。
-                                    {channelData[channelData.length-1].ma7 > channelData[channelData.length-1].ma30 
-                                        ? " 短期均线(MA7)位于中期均线(MA30)上方，显示近期信号有增强趋势，请关注。" 
-                                        : " 短期均线(MA7)平稳，未见明显突增异常。"}
+                                    {channelData[channelData.length-1].ma7 > channelData[channelData.length-1].ma30 ? " 短期均线(MA7)位于中期均线(MA30)上方，显示近期信号有增强趋势，请关注。" : " 短期均线(MA7)平稳，未见明显突增异常。"}
                                 </p>
                             </div>
                         </div>
@@ -658,74 +510,25 @@ const Dashboard: React.FC<DashboardProps> = ({ devices, projects, isDark, onDevi
   const getStatusConfig = (status: AlarmLevel) => {
     switch (status) {
       case AlarmLevel.CRITICAL:
-        return { 
-          color: '#ef4444', // Red-500
-          label: '三级',
-          icon: AlertOctagon,
-          containerClass: isDark 
-            ? 'border-red-500 bg-red-950/20 shadow-[0_0_20px_rgba(239,68,68,0.3)]' 
-            : 'border-red-500 bg-red-50 shadow-lg shadow-red-200',
-          headerClass: 'bg-red-600 text-white',
-          pulse: true
-        };
+        return { color: '#ef4444', label: '三级', icon: AlertOctagon, containerClass: isDark ? 'border-red-500 bg-red-950/20 shadow-[0_0_20px_rgba(239,68,68,0.3)]' : 'border-red-500 bg-red-50 shadow-lg shadow-red-200', headerClass: 'bg-red-600 text-white', pulse: true };
       case AlarmLevel.DANGER:
-        return { 
-          color: '#f97316', // Orange-500
-          label: '二级',
-          icon: AlertTriangle,
-          containerClass: isDark 
-            ? 'border-orange-500 bg-orange-950/20 shadow-[0_0_15px_rgba(249,115,22,0.2)]' 
-            : 'border-orange-500 bg-orange-50 shadow-md shadow-orange-200',
-          headerClass: 'bg-orange-500 text-white',
-          pulse: true
-        };
+        return { color: '#f97316', label: '二级', icon: AlertTriangle, containerClass: isDark ? 'border-orange-500 bg-orange-950/20 shadow-[0_0_15px_rgba(249,115,22,0.2)]' : 'border-orange-500 bg-orange-50 shadow-md shadow-orange-200', headerClass: 'bg-orange-500 text-white', pulse: true };
       case AlarmLevel.WARNING:
-        return { 
-          color: '#eab308', // Yellow-500
-          label: '一级',
-          icon: Info,
-          containerClass: isDark 
-            ? 'border-yellow-500/50 bg-yellow-900/10' 
-            : 'border-yellow-400 bg-yellow-50',
-          headerClass: isDark ? 'bg-yellow-500/20 text-yellow-400' : 'bg-yellow-100 text-yellow-700',
-          pulse: false
-        };
+        return { color: '#eab308', label: '一级', icon: Info, containerClass: isDark ? 'border-yellow-500/50 bg-yellow-900/10' : 'border-yellow-400 bg-yellow-50', headerClass: isDark ? 'bg-yellow-500/20 text-yellow-400' : 'bg-yellow-100 text-yellow-700', pulse: false };
       case AlarmLevel.NO_DATA:
-        return { 
-          color: '#94a3b8', // Slate-400
-          label: '无数据',
-          icon: HelpCircle,
-          containerClass: isDark 
-            ? 'border-slate-700 bg-slate-800/40 opacity-70' 
-            : 'border-gray-200 bg-gray-50 opacity-70',
-          headerClass: isDark ? 'bg-slate-700 text-slate-300' : 'bg-gray-300 text-slate-600',
-          pulse: false
-        };
+        return { color: '#94a3b8', label: '无数据', icon: HelpCircle, containerClass: isDark ? 'border-slate-700 bg-slate-800/40 opacity-70' : 'border-gray-200 bg-gray-50 opacity-70', headerClass: isDark ? 'bg-slate-700 text-slate-300' : 'bg-gray-300 text-slate-600', pulse: false };
       default: // NORMAL
-        return { 
-          color: '#22c55e', // Green-500
-          label: '正常',
-          icon: CheckCircle2,
-          containerClass: isDark 
-            ? 'border-slate-700 bg-slate-800/40 hover:border-blue-500/50' 
-            : 'border-gray-200 bg-white hover:border-blue-300 hover:shadow-md',
-          // Updated: Normal header is now Green
-          headerClass: 'bg-green-600 text-white',
-          pulse: false
-        };
+        return { color: '#22c55e', label: '正常', icon: CheckCircle2, containerClass: isDark ? 'border-slate-700 bg-slate-800/40 hover:border-blue-500/50' : 'border-gray-200 bg-white hover:border-blue-300 hover:shadow-md', headerClass: 'bg-green-600 text-white', pulse: false };
     }
   };
 
   const toggleStatusFilter = (status: AlarmLevel) => {
-    setFilterStatus(prev => 
-      prev.includes(status) ? prev.filter(s => s !== status) : [...prev, status]
-    );
+    setFilterStatus(prev => prev.includes(status) ? prev.filter(s => s !== status) : [...prev, status]);
   };
 
   const filteredDevices = useMemo(() => {
     let filtered = devices.filter(d => {
-      const matchesSearch = d.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
-                            d.station.toLowerCase().includes(searchTerm.toLowerCase());
+      const matchesSearch = d.name.toLowerCase().includes(searchTerm.toLowerCase()) || d.station.toLowerCase().includes(searchTerm.toLowerCase());
       const matchesStatus = filterStatus.length === 0 || filterStatus.includes(d.status);
       const matchesProject = selectedProjectId === 'all' || d.projectId === selectedProjectId;
       return matchesSearch && matchesStatus && matchesProject;
@@ -733,17 +536,8 @@ const Dashboard: React.FC<DashboardProps> = ({ devices, projects, isDark, onDevi
 
     return filtered.sort((a, b) => {
         const order = sortOrder === 'asc' ? 1 : -1;
-        // Primary sort by status severity (Critical > Danger > Warning > Normal > NoData)
-        const severity = { 
-          [AlarmLevel.CRITICAL]: 4, 
-          [AlarmLevel.DANGER]: 3, 
-          [AlarmLevel.WARNING]: 2, 
-          [AlarmLevel.NORMAL]: 1,
-          [AlarmLevel.NO_DATA]: 0
-        };
-        
+        const severity = { [AlarmLevel.CRITICAL]: 4, [AlarmLevel.DANGER]: 3, [AlarmLevel.WARNING]: 2, [AlarmLevel.NORMAL]: 1, [AlarmLevel.NO_DATA]: 0 };
         if (severity[a.status] !== severity[b.status]) {
-            // Descending: High Severity (4) to Low (0)
             return (severity[a.status] - severity[b.status]) * order; 
         }
         return 0;
@@ -754,9 +548,7 @@ const Dashboard: React.FC<DashboardProps> = ({ devices, projects, isDark, onDevi
       const file = e.target.files?.[0];
       if (file && onUpdateDeviceImage) {
           const reader = new FileReader();
-          reader.onloadend = () => {
-              onUpdateDeviceImage(deviceId, reader.result as string);
-          };
+          reader.onloadend = () => { onUpdateDeviceImage(deviceId, reader.result as string); };
           reader.readAsDataURL(file);
       }
   };
@@ -765,30 +557,12 @@ const Dashboard: React.FC<DashboardProps> = ({ devices, projects, isDark, onDevi
       return [{ id: 'all', name: '全部项目' }, ...projects];
   }, [projects]);
 
+  // Removed 'h-full' and 'overflow-hidden' from main div to allow natural height flow for scrolling
   return (
-    <div className={`w-full h-full flex flex-col p-6 overflow-hidden ${isDark ? 'text-slate-200' : 'text-slate-800'}`}>
-      
-      {/* Report Modal */}
-      {reportDevice && (
-        <ReportModal 
-            isOpen={true}
-            onClose={() => setReportDevice(null)}
-            device={reportDevice}
-            allDevices={devices}
-        />
-      )}
+    <div className={`w-full flex flex-col p-6 ${isDark ? 'text-slate-200' : 'text-slate-800'}`}>
+      {reportDevice && <ReportModal isOpen={true} onClose={() => setReportDevice(null)} device={reportDevice} allDevices={devices} />}
+      {maAnalysisDevice && <MAAnalysisModal isOpen={true} onClose={() => setMaAnalysisDevice(null)} device={maAnalysisDevice} isDark={isDark} />}
 
-      {/* MA Analysis Modal */}
-      {maAnalysisDevice && (
-        <MAAnalysisModal
-            isOpen={true}
-            onClose={() => setMaAnalysisDevice(null)}
-            device={maAnalysisDevice}
-            isDark={isDark}
-        />
-      )}
-
-      {/* Header & Filters */}
       <div className="flex flex-col gap-6 mb-6 flex-shrink-0">
         <div className="flex justify-between items-end">
             <div>
@@ -797,17 +571,10 @@ const Dashboard: React.FC<DashboardProps> = ({ devices, projects, isDark, onDevi
               </h1>
               <p className="text-sm opacity-60 font-medium">实时监控全站 GIS 设备局放状态与环境参数</p>
             </div>
-            
             <div className="flex gap-2">
                 <div className={`flex items-center px-3 py-2 rounded-lg border w-64 ${isDark ? 'bg-slate-900 border-slate-700' : 'bg-white border-gray-200'}`}>
                     <Search size={16} className="opacity-40 mr-2" />
-                    <input 
-                        type="text" 
-                        placeholder="搜索设备名称或变电站..." 
-                        value={searchTerm}
-                        onChange={(e) => setSearchTerm(e.target.value)}
-                        className="bg-transparent outline-none text-xs w-full"
-                    />
+                    <input type="text" placeholder="搜索设备名称或变电站..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className="bg-transparent outline-none text-xs w-full" />
                 </div>
             </div>
         </div>
@@ -822,59 +589,32 @@ const Dashboard: React.FC<DashboardProps> = ({ devices, projects, isDark, onDevi
                    </button>
                    <div className={`absolute top-full left-0 mt-1 w-48 rounded-xl border shadow-xl overflow-hidden hidden group-hover:block ${isDark ? 'bg-slate-900 border-slate-700' : 'bg-white border-gray-200'}`}>
                        {projectOptions.map(p => (
-                           <button 
-                                key={p.id}
-                                onClick={() => setSelectedProjectId(p.id)}
-                                className={`w-full text-left px-4 py-2 text-xs font-medium hover:bg-blue-500 hover:text-white transition-colors ${selectedProjectId === p.id ? 'bg-blue-500/10 text-blue-500' : ''}`}
-                           >
-                               {p.name}
-                           </button>
+                           <button key={p.id} onClick={() => setSelectedProjectId(p.id)} className={`w-full text-left px-4 py-2 text-xs font-medium hover:bg-blue-500 hover:text-white transition-colors ${selectedProjectId === p.id ? 'bg-blue-500/10 text-blue-500' : ''}`}>{p.name}</button>
                        ))}
                    </div>
                </div>
-
                <div className="h-6 w-px bg-gray-500/20 mx-1"></div>
-
                {[AlarmLevel.NORMAL, AlarmLevel.WARNING, AlarmLevel.DANGER, AlarmLevel.CRITICAL, AlarmLevel.NO_DATA].map(status => {
                    const isActive = filterStatus.includes(status);
                    const config = getStatusConfig(status);
                    return (
-                       <button 
-                          key={status}
-                          onClick={() => toggleStatusFilter(status)}
-                          className={`px-3 py-1.5 rounded-lg text-xs font-bold border transition-all flex items-center gap-1.5
-                            ${isActive 
-                                ? `bg-opacity-20 border-opacity-50` 
-                                : `opacity-50 grayscale border-transparent hover:opacity-100 hover:grayscale-0 hover:bg-white/5`
-                            }
-                          `}
-                          style={{ 
-                              backgroundColor: isActive ? config.color + '20' : 'transparent',
-                              borderColor: isActive ? config.color : 'transparent',
-                              color: isActive ? config.color : (isDark ? '#94a3b8' : '#64748b')
-                          }}
-                       >
+                       <button key={status} onClick={() => toggleStatusFilter(status)} className={`px-3 py-1.5 rounded-lg text-xs font-bold border transition-all flex items-center gap-1.5 ${isActive ? `bg-opacity-20 border-opacity-50` : `opacity-50 grayscale border-transparent hover:opacity-100 hover:grayscale-0 hover:bg-white/5`}`} style={{ backgroundColor: isActive ? config.color + '20' : 'transparent', borderColor: isActive ? config.color : 'transparent', color: isActive ? config.color : (isDark ? '#94a3b8' : '#64748b') }}>
                            <div className={`w-2 h-2 rounded-full`} style={{ backgroundColor: config.color }}></div>
                            {config.label}
                        </button>
                    )
                })}
             </div>
-
-            <button 
-                onClick={() => setSortOrder(prev => prev === 'asc' ? 'desc' : 'asc')}
-                className={`p-2 rounded-lg transition-all ${isDark ? 'hover:bg-slate-700 text-slate-400' : 'hover:bg-gray-100 text-slate-600'}`}
-                title={sortOrder === 'asc' ? "当前：低到高 (No Data -> Critical)" : "当前：高到低 (Critical -> No Data)"}
-            >
+            <button onClick={() => setSortOrder(prev => prev === 'asc' ? 'desc' : 'asc')} className={`p-2 rounded-lg transition-all ${isDark ? 'hover:bg-slate-700 text-slate-400' : 'hover:bg-gray-100 text-slate-600'}`} title={sortOrder === 'asc' ? "当前：低到高 (No Data -> Critical)" : "当前：高到低 (Critical -> No Data)"}>
                 {sortOrder === 'asc' ? <SortAsc size={18} /> : <SortDesc size={18} />}
             </button>
         </div>
       </div>
 
-      {/* Grid */}
-      <div className="flex-1 overflow-y-auto custom-scrollbar pb-6">
+      {/* Grid Container - Removed flex-1 and overflow-y-auto to allow content to dictate height */}
+      <div className="pb-6">
          {filteredDevices.length === 0 ? (
-             <div className="h-full flex flex-col items-center justify-center opacity-30">
+             <div className="h-96 flex flex-col items-center justify-center opacity-30">
                  <ListFilter size={48} className="mb-4" />
                  <p className="text-lg font-bold">没有找到匹配的设备</p>
                  <p className="text-sm">请尝试调整筛选条件或搜索关键词</p>
@@ -885,154 +625,50 @@ const Dashboard: React.FC<DashboardProps> = ({ devices, projects, isDark, onDevi
                      const statusConfig = getStatusConfig(device.status);
                      const project = projects.find(p => p.id === device.projectId);
                      const hasData = device.status !== AlarmLevel.NO_DATA;
-                     
                      return (
-                         <div 
-                            key={device.id}
-                            className={`group relative rounded-2xl border-2 overflow-hidden flex flex-col transition-all duration-300 hover:-translate-y-1
-                                ${statusConfig.containerClass}
-                            `}
-                            onClick={() => onDeviceSelect(device.id)}
-                         >
-                             {/* Header Section - Status Driven */}
+                         <div key={device.id} className={`group relative rounded-2xl border-2 overflow-hidden flex flex-col transition-all duration-300 hover:-translate-y-1 ${statusConfig.containerClass}`} onClick={() => onDeviceSelect(device.id)}>
                              <div className={`px-4 py-3 flex justify-between items-center relative ${statusConfig.headerClass}`}>
                                  <div className="min-w-0 flex-1 pr-2">
-                                     <div className="text-[10px] opacity-80 uppercase tracking-wider font-bold mb-0.5 truncate">
-                                        {device.station}
-                                     </div>
-                                     <div className="text-base font-black truncate" title={device.name}>
-                                        {device.name}
-                                     </div>
+                                     <div className="text-[10px] opacity-80 uppercase tracking-wider font-bold mb-0.5 truncate">{device.station}</div>
+                                     <div className="text-base font-black truncate" title={device.name}>{device.name}</div>
                                  </div>
                                  <div className={`flex flex-col items-end gap-0.5 flex-shrink-0 ${statusConfig.pulse ? 'animate-pulse' : ''}`}>
-                                     <div className="flex items-center gap-2">
-                                         <statusConfig.icon size={20} strokeWidth={3} />
-                                         <span className="text-xs font-black uppercase">{statusConfig.label}</span>
-                                     </div>
-                                     <span className="text-[9px] opacity-70 font-mono tracking-tight" title="基于7天历史数据的状态判定">
-                                         {device.lastUpdated.split(' ')[0]}
-                                     </span>
+                                     <div className="flex items-center gap-2"><statusConfig.icon size={20} strokeWidth={3} /><span className="text-xs font-black uppercase">{statusConfig.label}</span></div>
+                                     <span className="text-[9px] opacity-70 font-mono tracking-tight" title="基于7天历史数据的状态判定">{device.lastUpdated.split(' ')[0]}</span>
                                  </div>
                              </div>
-
-                             {/* Content Section */}
                              <div className="p-4 flex-1 flex flex-col relative">
-                                 {/* Image Thumbnail */}
                                  <div className="absolute top-4 right-4 z-10">
-                                     <div 
-                                        className={`w-12 h-12 rounded-lg overflow-hidden border-2 border-white/20 shadow-sm bg-gray-900 group-hover:scale-110 transition-transform cursor-pointer relative ${!hasData ? 'grayscale opacity-50' : ''}`}
-                                        onClick={(e) => { e.stopPropagation(); fileInputRefs.current[device.id]?.click(); }}
-                                        title="点击更新图片"
-                                     >
-                                        <img 
-                                            src={device.customImage || GIS_EQUIPMENT_FALLBACK} 
-                                            className="w-full h-full object-cover opacity-80" 
-                                            alt="Thumbnail" 
-                                        />
-                                        <div className="absolute inset-0 flex items-center justify-center opacity-0 hover:opacity-100 bg-black/40 transition-opacity">
-                                            <Upload size={12} className="text-white"/>
-                                        </div>
+                                     <div className={`w-12 h-12 rounded-lg overflow-hidden border-2 border-white/20 shadow-sm bg-gray-900 group-hover:scale-110 transition-transform cursor-pointer relative ${!hasData ? 'grayscale opacity-50' : ''}`} onClick={(e) => { e.stopPropagation(); fileInputRefs.current[device.id]?.click(); }} title="点击更新图片">
+                                        <img src={device.customImage || GIS_EQUIPMENT_FALLBACK} className="w-full h-full object-cover opacity-80" alt="Thumbnail" />
+                                        <div className="absolute inset-0 flex items-center justify-center opacity-0 hover:opacity-100 bg-black/40 transition-opacity"><Upload size={12} className="text-white"/></div>
                                      </div>
-                                     <input 
-                                        type="file" 
-                                        className="hidden" 
-                                        accept="image/*"
-                                        ref={(el) => { fileInputRefs.current[device.id] = el; }}
-                                        onChange={(e) => handleImageUpload(e, device.id)}
-                                        onClick={(e) => e.stopPropagation()}
-                                     />
+                                     <input type="file" className="hidden" accept="image/*" ref={(el) => { fileInputRefs.current[device.id] = el; }} onChange={(e) => handleImageUpload(e, device.id)} onClick={(e) => e.stopPropagation()} />
                                  </div>
-
-                                 {/* Metrics Grid */}
                                  <div className={`grid grid-cols-2 gap-y-4 gap-x-2 mb-4 pr-14 ${!hasData ? 'opacity-30 grayscale' : ''}`}>
-                                     <div className="flex flex-col">
-                                         <span className="text-[10px] opacity-50 font-bold uppercase mb-0.5">UHF 局放</span>
-                                         <div className="flex items-baseline gap-1">
-                                            <Waves size={12} className="text-blue-500" />
-                                            <span className="text-sm font-black font-mono">{hasData ? device.uhf_amp : '--'}</span>
-                                            <span className="text-[9px] opacity-50">dBmV</span>
-                                         </div>
-                                     </div>
-                                     <div className="flex flex-col">
-                                         <span className="text-[10px] opacity-50 font-bold uppercase mb-0.5">TEV 局放</span>
-                                         <div className="flex items-baseline gap-1">
-                                            <Zap size={12} className="text-purple-500" />
-                                            <span className="text-sm font-black font-mono">{hasData ? device.tev_amp : '--'}</span>
-                                            <span className="text-[9px] opacity-50">dBmV</span>
-                                         </div>
-                                     </div>
-                                     <div className="flex flex-col">
-                                         <span className="text-[10px] opacity-50 font-bold uppercase mb-0.5">环境温度</span>
-                                         <div className="flex items-baseline gap-1">
-                                            <Thermometer size={12} className="text-orange-500" />
-                                            <span className="text-sm font-black font-mono">{hasData ? device.temp : '--'}</span>
-                                            <span className="text-[9px] opacity-50">°C</span>
-                                         </div>
-                                     </div>
-                                     <div className="flex flex-col">
-                                         <span className="text-[10px] opacity-50 font-bold uppercase mb-0.5">环境湿度</span>
-                                         <div className="flex items-baseline gap-1">
-                                            <Droplets size={12} className="text-cyan-500" />
-                                            <span className="text-sm font-black font-mono">{hasData ? device.humidity : '--'}</span>
-                                            <span className="text-[9px] opacity-50">%</span>
-                                         </div>
-                                     </div>
+                                     <div className="flex flex-col"><span className="text-[10px] opacity-50 font-bold uppercase mb-0.5">UHF 局放</span><div className="flex items-baseline gap-1"><Waves size={12} className="text-blue-500" /><span className="text-sm font-black font-mono">{hasData ? device.uhf_amp : '--'}</span><span className="text-[9px] opacity-50">dBmV</span></div></div>
+                                     <div className="flex flex-col"><span className="text-[10px] opacity-50 font-bold uppercase mb-0.5">TEV 局放</span><div className="flex items-baseline gap-1"><Zap size={12} className="text-purple-500" /><span className="text-sm font-black font-mono">{hasData ? device.tev_amp : '--'}</span><span className="text-[9px] opacity-50">dBmV</span></div></div>
+                                     <div className="flex flex-col"><span className="text-[10px] opacity-50 font-bold uppercase mb-0.5">环境温度</span><div className="flex items-baseline gap-1"><Thermometer size={12} className="text-orange-500" /><span className="text-sm font-black font-mono">{hasData ? device.temp : '--'}</span><span className="text-[9px] opacity-50">°C</span></div></div>
+                                     <div className="flex flex-col"><span className="text-[10px] opacity-50 font-bold uppercase mb-0.5">环境湿度</span><div className="flex items-baseline gap-1"><Droplets size={12} className="text-cyan-500" /><span className="text-sm font-black font-mono">{hasData ? device.humidity : '--'}</span><span className="text-[9px] opacity-50">%</span></div></div>
                                  </div>
-
-                                 {/* Mini Trend Chart (Interactive) */}
-                                 <div 
-                                    className="h-10 w-full opacity-60 hover:opacity-100 transition-opacity mt-auto mb-3 cursor-pointer relative group/chart"
-                                    onClick={(e) => {
-                                        e.stopPropagation();
-                                        if (hasData) setMaAnalysisDevice(device);
-                                    }}
-                                    title={hasData ? "点击查看详细 MA 趋势分析" : ""}
-                                 >
+                                 <div className="h-10 w-full opacity-60 hover:opacity-100 transition-opacity mt-auto mb-3 cursor-pointer relative group/chart" onClick={(e) => { e.stopPropagation(); if (hasData) setMaAnalysisDevice(device); }} title={hasData ? "点击查看详细 MA 趋势分析" : ""}>
                                      {hasData ? (
                                          <>
                                             <ResponsiveContainer width="100%" height="100%">
                                                 <AreaChart data={device.trend.map((v, i) => ({ v, i }))}>
-                                                    <defs>
-                                                        <linearGradient id={`grad-${device.id}`} x1="0" y1="0" x2="0" y2="1">
-                                                            <stop offset="5%" stopColor={statusConfig.color} stopOpacity={0.3}/>
-                                                            <stop offset="95%" stopColor={statusConfig.color} stopOpacity={0}/>
-                                                        </linearGradient>
-                                                    </defs>
-                                                    <Area 
-                                                        type="monotone" 
-                                                        dataKey="v" 
-                                                        stroke={statusConfig.color} 
-                                                        strokeWidth={2} 
-                                                        fill={`url(#grad-${device.id})`} 
-                                                        isAnimationActive={false}
-                                                    />
+                                                    <defs><linearGradient id={`grad-${device.id}`} x1="0" y1="0" x2="0" y2="1"><stop offset="5%" stopColor={statusConfig.color} stopOpacity={0.3}/><stop offset="95%" stopColor={statusConfig.color} stopOpacity={0}/></linearGradient></defs>
+                                                    <Area type="monotone" dataKey="v" stroke={statusConfig.color} strokeWidth={2} fill={`url(#grad-${device.id})`} isAnimationActive={false} />
                                                 </AreaChart>
                                             </ResponsiveContainer>
                                             <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover/chart:opacity-100 transition-opacity bg-black/5 pointer-events-none">
-                                                <div className="bg-black/70 text-white text-[10px] px-2 py-1 rounded backdrop-blur-sm shadow-sm flex items-center gap-1">
-                                                    <TrendingUp size={10} /> MA 分析
-                                                </div>
+                                                <div className="bg-black/70 text-white text-[10px] px-2 py-1 rounded backdrop-blur-sm shadow-sm flex items-center gap-1"><TrendingUp size={10} /> MA 分析</div>
                                             </div>
                                          </>
-                                     ) : (
-                                        <div className="w-full h-full flex items-center justify-center border-t border-dashed border-gray-500/20">
-                                            <span className="text-[10px] opacity-40">暂无趋势数据</span>
-                                        </div>
-                                     )}
+                                     ) : ( <div className="w-full h-full flex items-center justify-center border-t border-dashed border-gray-500/20"><span className="text-[10px] opacity-40">暂无趋势数据</span></div> )}
                                  </div>
-                                 
-                                 {/* Footer */}
                                  <div className="flex justify-between items-center pt-3 border-t border-dashed border-gray-500/10">
-                                     <button 
-                                        onClick={(e) => { e.stopPropagation(); setReportDevice(device); }}
-                                        className="text-xs font-bold flex items-center gap-1 transition-colors opacity-60 hover:opacity-100 hover:text-blue-500 bg-gray-500/5 px-2 py-1 rounded-md"
-                                     >
-                                         <FileText size={12} /> 报告
-                                     </button>
-                                     
-                                     <button className={`text-xs font-bold flex items-center gap-1 transition-colors hover:text-blue-500 opacity-60 hover:opacity-100 bg-gray-500/5 px-2 py-1 rounded-md`}>
-                                         详情诊断 <ArrowUpRight size={12} />
-                                     </button>
+                                     <button onClick={(e) => { e.stopPropagation(); setReportDevice(device); }} className="text-xs font-bold flex items-center gap-1 transition-colors opacity-60 hover:opacity-100 hover:text-blue-500 bg-gray-500/5 px-2 py-1 rounded-md"><FileText size={12} /> 报告</button>
+                                     <button className={`text-xs font-bold flex items-center gap-1 transition-colors hover:text-blue-500 opacity-60 hover:opacity-100 bg-gray-500/5 px-2 py-1 rounded-md`}>详情诊断 <ArrowUpRight size={12} /></button>
                                  </div>
                              </div>
                          </div>
